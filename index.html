@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caravan</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.4/babel.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Oswald:wght@400;500;600;700&family=Stardos+Stencil:wght@700&display=swap">
+<style>
+html,body{margin:0;min-height:100%;background:#3b2d24}
+:root{--ch:96px;--off:30px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(min-width:640px){:root{--ch:112px}}
+
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                
+                .wasteland-bg {
+                    background-image: 
+                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.25'/%3E%3C/svg%3E"),
+                        radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+                    background-color: #3b2d24;
+                }
+                
+                .card-grime {
+                    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter2)' opacity='0.15'/%3E%3C/svg%3E");
+                }
+            
+:root{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008 0.35' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.07 0 0 0 0 0.02 0 0 0 0.7 -0.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E")}
+body{font-family:'Oswald','Segoe UI',Arial,sans-serif}
+.title-font{font-family:'Rye',Georgia,serif;letter-spacing:.04em;font-weight:400}
+.room-bg{background:radial-gradient(ellipse at 50% 20%,#4d3521 0%,#1a110a 70%,#0c0705 100%)}
+.wood{background-image:var(--grain),repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 2px,transparent 2px 84px),linear-gradient(180deg,#936038,#74492a 50%,#8a5733);box-shadow:inset 0 0 70px rgba(0,0,0,.55),0 12px 40px rgba(0,0,0,.8)}
+.wood-panel{background-image:var(--grain),linear-gradient(#5a3a22,#3d2514);border:3px solid #c9a24a;box-shadow:0 0 40px rgba(0,0,0,.8),inset 0 0 30px rgba(0,0,0,.5)}
+.lane{background:rgba(25,12,4,.3);box-shadow:inset 0 2px 14px rgba(0,0,0,.55);border:1px solid rgba(0,0,0,.35)}
+.brass{background:linear-gradient(180deg,#e2bd5c,#b68a32 55%,#d4ac4c);border:1px solid #5c4210;box-shadow:0 2px 5px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4);color:#2b1c06}
+.brass-dot{background:linear-gradient(180deg,#e8c460,#a07a28);border:1px solid #5c4210;color:#2b1c06;border-radius:999px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 2px 3px rgba(0,0,0,.6)}
+@keyframes dropIn{from{opacity:0;transform:translateY(-40px) scale(1.1) rotate(-4deg)}to{opacity:1;transform:none}}
+@keyframes riseIn{from{opacity:0;transform:translateY(46px) scale(.9) rotate(3deg)}to{opacity:1;transform:none}}
+@keyframes dealIn{from{opacity:0;transform:translateY(30px) rotate(6deg)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes chipIn{from{opacity:0;transform:translateY(-16px) rotate(-14deg)}to{opacity:1;transform:none}}
+.anim-top{animation:dropIn .4s cubic-bezier(.2,.8,.3,1.15) both}
+.anim-bot{animation:riseIn .4s cubic-bezier(.2,.8,.3,1.15) both}
+.anim-deal{animation:dealIn .35s ease-out both}
+.anim-pop{animation:pop .4s ease-out}
+.chip{animation:chipIn .35s cubic-bezier(.3,1.6,.5,1) both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+.anim-deal{animation:dealIn .35s ease-out backwards}
+.worn{position:relative}
+.worn::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;mix-blend-mode:multiply;
+ background:radial-gradient(circle at var(--sx,30%) var(--sy,70%),rgba(95,58,22,.34),transparent 38%),radial-gradient(circle at var(--tx,80%) var(--ty,20%),rgba(60,35,10,.22),transparent 28%),linear-gradient(105deg,transparent 49.4%,rgba(0,0,0,.16) 50%,transparent 50.7%),var(--grain);
+ background-size:auto,auto,auto,120px 60px;box-shadow:inset 0 0 14px rgba(70,45,20,.6),inset 0 0 2px rgba(0,0,0,.5)}
+.wood::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+ background:radial-gradient(ellipse 70px 45px at 18% 30%,rgba(20,8,0,.4),transparent 70%),radial-gradient(circle 38px at 78% 62%,transparent 29px,rgba(25,10,2,.45) 32px,transparent 38px),radial-gradient(ellipse 150px 90px at 60% 88%,rgba(15,6,0,.35),transparent 70%),radial-gradient(ellipse 100px 60px at 90% 15%,rgba(10,4,0,.3),transparent 70%),repeating-linear-gradient(97deg,transparent 0 37px,rgba(255,255,255,.05) 37px 38px,transparent 38px 91px),repeating-linear-gradient(8deg,transparent 0 53px,rgba(0,0,0,.14) 53px 54px,transparent 54px 130px)}
+.film{background-image:var(--grain),radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.55) 100%);opacity:.5;mix-blend-mode:multiply}
+.brass{background-image:radial-gradient(circle at 15% 85%,rgba(70,45,10,.6),transparent 45%),radial-gradient(circle at 90% 10%,rgba(70,45,10,.4),transparent 40%),var(--grain),linear-gradient(180deg,#d9b457,#a77d2c 55%,#c79f44)}
+.wood-panel{background-image:radial-gradient(ellipse at 20% 100%,rgba(10,4,0,.55),transparent 55%),radial-gradient(ellipse at 90% 0%,rgba(10,4,0,.4),transparent 45%),var(--grain),linear-gradient(#5a3a22,#3d2514)}
+.sign{background-image:radial-gradient(ellipse at 10% 100%,rgba(90,40,10,.45),transparent 50%),var(--grain),linear-gradient(#2b2a27,#171614);border:2px solid #4a4235;box-shadow:inset 0 0 12px rgba(0,0,0,.8),0 3px 8px rgba(0,0,0,.7)}
+
+:root{--blot:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='5' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 2.2 -0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E")}
+.wood{background-color:#2a231c;background-image:radial-gradient(ellipse 75% 60% at 50% 40%,rgba(160,130,90,.2),transparent 75%),var(--blot),var(--grain),repeating-linear-gradient(0deg,rgba(0,0,0,.6) 0 2px,transparent 2px 100px),linear-gradient(180deg,#4b3f32,#352a20 50%,#42372a);background-size:auto,600px 600px,auto,auto,auto;box-shadow:inset 0 0 180px rgba(0,0,0,.92);filter:saturate(.7) contrast(1.1)}
+.worn::after{background:radial-gradient(circle at var(--sx,30%) var(--sy,70%),rgba(70,42,14,.5),transparent 40%),radial-gradient(circle at var(--tx,80%) var(--ty,20%),rgba(40,24,8,.35),transparent 30%),linear-gradient(105deg,transparent 49.3%,rgba(0,0,0,.28) 50%,transparent 50.8%),var(--blot),var(--grain);background-size:auto,auto,auto,160px 160px,120px 60px;box-shadow:inset 0 0 20px rgba(35,22,8,.9),inset 0 0 3px rgba(0,0,0,.7)}
+.ink{mix-blend-mode:multiply;opacity:.88}
+.stencil{width:100%;text-align:center;padding:2px 0;margin:4px 0;letter-spacing:.08em;text-shadow:0 1px 2px #000}
+.win-user{border-bottom:2px solid #8fa56a}.win-ai{border-bottom:2px solid #b0463a}
+.wood-panel{background-color:#2b2722;background-image:radial-gradient(circle at 12px 12px,#8a8478 0 3px,#2a2620 4px,transparent 5px),radial-gradient(circle at calc(100% - 12px) 12px,#8a8478 0 3px,#2a2620 4px,transparent 5px),radial-gradient(circle at 12px calc(100% - 12px),#8a8478 0 3px,#2a2620 4px,transparent 5px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#8a8478 0 3px,#2a2620 4px,transparent 5px),radial-gradient(ellipse at 20% 100%,rgba(110,50,14,.45),transparent 55%),var(--blot),var(--grain),linear-gradient(#3b362e,#25221d);border:3px solid #15120e;outline:1px solid #5a4e3a;box-shadow:0 0 40px rgba(0,0,0,.9),inset 0 0 40px rgba(0,0,0,.6)}
+.brass-dot{background:linear-gradient(180deg,#463d31,#2a241c);border:1px solid #0f0b07;color:#cbb98f}
+.film{opacity:.6}
+
+.cardsz{width:var(--cw);height:var(--ch)}
+:root{--cw:64px}
+@media(min-width:640px){:root{--cw:80px}}
+@media(min-width:1024px) and (min-height:840px){:root{--cw:96px;--ch:144px;--off:38px}
+ .ci1{font-size:1.1rem!important}.ci2{font-size:.9rem!important}.cp{font-size:1.45rem!important}.ca{font-size:3.6rem!important}.cf{font-size:3rem!important}.cs{font-size:1.5rem!important}}
+
+:root{--paint:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.05' numOctaves='5' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.84 0 0 0 0 0.78 0 0 0 0 0.6 0 0 0 3.2 -1.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");--ow:28px;--oh:40px}
+@media(min-width:640px){:root{--ow:36px;--oh:48px}}
+@media(min-width:1024px){:root{--ow:calc(var(--cw)*.8);--oh:calc(var(--ch)*.8)}}
+.oppsz{width:var(--ow);height:var(--oh)}
+.pile{width:calc(var(--cw)*.72);height:calc(var(--ch)*.72)}.pile-s{width:var(--ow);height:var(--oh)}
+@media(min-width:1024px){.pile{width:var(--cw);height:var(--ch)}}
+.wood{background-color:#4f4331;background-image:radial-gradient(ellipse 85% 70% at 50% 42%,rgba(255,205,120,.26),transparent 72%),repeating-linear-gradient(0deg,transparent 0 168px,rgba(0,0,0,.95) 168px 176px,rgba(0,0,0,.35) 176px 180px,rgba(255,235,190,.1) 180px 182px,transparent 182px 184px),var(--paint),var(--blot),var(--grain),linear-gradient(180deg,#6a5a42,#4a3f2e 50%,#625239);background-size:auto,auto,720px 480px,600px 600px,auto,auto;box-shadow:inset 0 0 200px rgba(0,0,0,.85);filter:saturate(.9) sepia(.28) contrast(1.05)}
+.wood::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle 5px at 8% 20%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 41% 19%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 63% 20%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 23% 52%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 71% 51%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 12% 79%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 52% 80%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px),radial-gradient(circle 5px at 88% 84%,#d8d0b8 0 1px,#1b140d 2px 3.5px,transparent 4.5px)}
+.hud{font-family:'Oswald','Segoe UI',sans-serif;font-weight:500;color:#e0a040;text-shadow:0 0 6px rgba(224,160,64,.35),0 1px 2px #000;letter-spacing:.03em}
+.hud-cmd{font-family:'Oswald',sans-serif;font-weight:500;color:#e0a040;background:none;border:0;padding:1px 0;text-align:right;text-shadow:0 0 6px rgba(224,160,64,.3),0 1px 2px #000;cursor:pointer}
+.hud-cmd:hover:not(:disabled){color:#ffd27a}.hud-cmd:disabled{opacity:.35;cursor:default}
+.carve{font-family:'Stardos Stencil','Oswald',sans-serif;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(236,210,150,.8);text-shadow:0 1px 0 rgba(0,0,0,.75),0 -1px 0 rgba(255,240,200,.18)}
+.stencil{width:100%;margin:6px 0;text-align:center}
+
+:root{--planks:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='740'%3E%3Cdefs%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0025 0.22' numOctaves='4' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .10 0 0 0 0 .07 0 0 0 0 .04 0 0 0 1.7 -.6'/%3E%3C/filter%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.035' numOctaves='5' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .82 0 0 0 0 .77 0 0 0 0 .60 0 0 0 4.2 -2.15'/%3E%3C/filter%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8 0.05' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .05 0 0 0 0 .03 0 0 0 0 .01 0 0 0 2.4 -1.05'/%3E%3C/filter%3E%3CradialGradient id='k'%3E%3Cstop offset='0' stop-color='%23120c06'/%3E%3Cstop offset='.55' stop-color='%232a1d0f'/%3E%3Cstop offset='1' stop-color='%232a1d0f' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect y='0' width='1600' height='178' fill='%236b5a41'/%3E%3Crect y='185' width='1600' height='178' fill='%235a4c39'/%3E%3Crect y='370' width='1600' height='178' fill='%23665639'/%3E%3Crect y='555' width='1600' height='178' fill='%23574a38'/%3E%3Crect width='1600' height='740' filter='url(%23g)'/%3E%3Crect width='1600' height='740' filter='url(%23p)' opacity='.88'/%3E%3Crect width='1600' height='740' filter='url(%23f)' opacity='.7'/%3E%3Crect y='177' width='1600' height='8' fill='%23090603'/%3E%3Crect y='175.5' width='1600' height='2' fill='%23e4d2a0' opacity='.22'/%3E%3Crect y='184' width='1600' height='1' fill='%23000' opacity='.7'/%3E%3Crect y='362' width='1600' height='8' fill='%23090603'/%3E%3Crect y='360.5' width='1600' height='2' fill='%23e4d2a0' opacity='.22'/%3E%3Crect y='369' width='1600' height='1' fill='%23000' opacity='.7'/%3E%3Crect y='547' width='1600' height='8' fill='%23090603'/%3E%3Crect y='545.5' width='1600' height='2' fill='%23e4d2a0' opacity='.22'/%3E%3Crect y='554' width='1600' height='1' fill='%23000' opacity='.7'/%3E%3Crect y='732' width='1600' height='8' fill='%23090603'/%3E%3Crect y='730.5' width='1600' height='2' fill='%23e4d2a0' opacity='.22'/%3E%3Crect y='739' width='1600' height='1' fill='%23000' opacity='.7'/%3E%3Cellipse cx='330' cy='90' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='330' cy='90' rx='40' ry='20' fill='none' stroke='%231a1208' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cellipse cx='1180' cy='270' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='1180' cy='270' rx='40' ry='20' fill='none' stroke='%231a1208' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cellipse cx='760' cy='455' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='760' cy='455' rx='40' ry='20' fill='none' stroke='%231a1208' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cellipse cx='1420' cy='640' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='1420' cy='640' rx='40' ry='20' fill='none' stroke='%231a1208' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cpath d='M120 30 l60 22 l35 -8 l50 30' fill='none' stroke='%230c0804' stroke-width='1.6' stroke-opacity='.8'/%3E%3Cpath d='M900 210 l-40 30 l20 40 l-30 50' fill='none' stroke='%230c0804' stroke-width='1.6' stroke-opacity='.8'/%3E%3Cpath d='M1300 410 l50 14 l30 -18 l60 20' fill='none' stroke='%230c0804' stroke-width='1.6' stroke-opacity='.8'/%3E%3Cpath d='M470 590 l-30 40 l50 25 l20 60' fill='none' stroke='%230c0804' stroke-width='1.6' stroke-opacity='.8'/%3E%3Cpath d='M1050 80 l45 25 l12 40' fill='none' stroke='%230c0804' stroke-width='1.6' stroke-opacity='.8'/%3E%3Ccircle cx='60' cy='88' r='4' fill='%230b0703'/%3E%3Ccircle cx='60' cy='88' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='520' cy='87' r='4' fill='%230b0703'/%3E%3Ccircle cx='520' cy='87' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='990' cy='90' r='4' fill='%230b0703'/%3E%3Ccircle cx='990' cy='90' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='1480' cy='86' r='4' fill='%230b0703'/%3E%3Ccircle cx='1480' cy='86' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='300' cy='272' r='4' fill='%230b0703'/%3E%3Ccircle cx='300' cy='272' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='860' cy='270' r='4' fill='%230b0703'/%3E%3Ccircle cx='860' cy='270' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='1320' cy='275' r='4' fill='%230b0703'/%3E%3Ccircle cx='1320' cy='275' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='140' cy='458' r='4' fill='%230b0703'/%3E%3Ccircle cx='140' cy='458' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='700' cy='455' r='4' fill='%230b0703'/%3E%3Ccircle cx='700' cy='455' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='1210' cy='460' r='4' fill='%230b0703'/%3E%3Ccircle cx='1210' cy='460' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='420' cy='642' r='4' fill='%230b0703'/%3E%3Ccircle cx='420' cy='642' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='1000' cy='640' r='4' fill='%230b0703'/%3E%3Ccircle cx='1000' cy='640' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3Ccircle cx='1540' cy='645' r='4' fill='%230b0703'/%3E%3Ccircle cx='1540' cy='645' r='5.5' fill='none' stroke='%23d8c89a' stroke-opacity='.25'/%3E%3C/svg%3E")}
+.wood{background-image:radial-gradient(ellipse 85% 70% at 50% 42%,rgba(255,205,120,.22),transparent 72%),var(--planks),var(--blot),linear-gradient(180deg,#5a4c39,#4a3f2e);background-size:auto,1600px 740px,600px 600px,auto}
+.wood::after{background:none}
+.handwrap{padding-inline:calc(var(--cw)*.85)}
+.oppwrap{padding-inline:calc(var(--ow)*.85)}
+@media(min-width:1024px){:root{--ow:calc(var(--cw)*.9);--oh:calc(var(--ch)*.9)}}
+@media(min-width:1600px) and (min-height:900px){:root{--cw:112px;--ch:168px;--off:46px}
+ .ci1{font-size:1.25rem!important}.ci2{font-size:1rem!important}.cp{font-size:1.7rem!important}.ca{font-size:4.2rem!important}.cf{font-size:3.5rem!important}.cs{font-size:1.8rem!important}}
+
+:root{--planks:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='740'%3E%3Cdefs%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0018 0.28' numOctaves='5' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .04 0 0 0 0 .03 0 0 0 0 .015 0 0 0 2.2 -.75'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.5' numOctaves='3' seed='6' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .46 0 0 0 0 .32 0 0 0 1.6 -.82'/%3E%3C/filter%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.003 0.04' numOctaves='5' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .50 0 0 0 0 .46 0 0 0 0 .36 0 0 0 4.2 -2.3'/%3E%3C/filter%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8 0.05' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .02 0 0 0 0 .01 0 0 0 0 0 0 0 0 2.6 -1.1'/%3E%3C/filter%3E%3CradialGradient id='k'%3E%3Cstop offset='0' stop-color='%23080503'/%3E%3Cstop offset='.55' stop-color='%231a120a'/%3E%3Cstop offset='1' stop-color='%231a120a' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect y='0' width='1600' height='178' fill='%233b3124'/%3E%3Crect y='185' width='1600' height='178' fill='%2330281d'/%3E%3Crect y='370' width='1600' height='178' fill='%23382e20'/%3E%3Crect y='555' width='1600' height='178' fill='%232d261b'/%3E%3Crect width='1600' height='740' filter='url(%23l)' opacity='.55'/%3E%3Crect width='1600' height='740' filter='url(%23g)'/%3E%3Crect width='1600' height='740' filter='url(%23p)' opacity='.42'/%3E%3Crect width='1600' height='740' filter='url(%23f)' opacity='.8'/%3E%3Crect y='177' width='1600' height='8' fill='%23050302'/%3E%3Crect y='175.5' width='1600' height='2' fill='%23b8a77c' opacity='.16'/%3E%3Crect y='184' width='1600' height='1' fill='%23000' opacity='.8'/%3E%3Crect y='362' width='1600' height='8' fill='%23050302'/%3E%3Crect y='360.5' width='1600' height='2' fill='%23b8a77c' opacity='.16'/%3E%3Crect y='369' width='1600' height='1' fill='%23000' opacity='.8'/%3E%3Crect y='547' width='1600' height='8' fill='%23050302'/%3E%3Crect y='545.5' width='1600' height='2' fill='%23b8a77c' opacity='.16'/%3E%3Crect y='554' width='1600' height='1' fill='%23000' opacity='.8'/%3E%3Crect y='732' width='1600' height='8' fill='%23050302'/%3E%3Crect y='730.5' width='1600' height='2' fill='%23b8a77c' opacity='.16'/%3E%3Crect y='739' width='1600' height='1' fill='%23000' opacity='.8'/%3E%3Cellipse cx='330' cy='90' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='330' cy='90' rx='40' ry='20' fill='none' stroke='%230d0804' stroke-opacity='.55' stroke-width='1.4'/%3E%3Cellipse cx='1180' cy='270' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='1180' cy='270' rx='40' ry='20' fill='none' stroke='%230d0804' stroke-opacity='.55' stroke-width='1.4'/%3E%3Cellipse cx='760' cy='455' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='760' cy='455' rx='40' ry='20' fill='none' stroke='%230d0804' stroke-opacity='.55' stroke-width='1.4'/%3E%3Cellipse cx='1420' cy='640' rx='26' ry='13' fill='url(%23k)'/%3E%3Cellipse cx='1420' cy='640' rx='40' ry='20' fill='none' stroke='%230d0804' stroke-opacity='.55' stroke-width='1.4'/%3E%3Cpath d='M120 30 l60 22 l35 -8 l50 30' fill='none' stroke='%23050302' stroke-width='1.7' stroke-opacity='.85'/%3E%3Cpath d='M900 210 l-40 30 l20 40 l-30 50' fill='none' stroke='%23050302' stroke-width='1.7' stroke-opacity='.85'/%3E%3Cpath d='M1300 410 l50 14 l30 -18 l60 20' fill='none' stroke='%23050302' stroke-width='1.7' stroke-opacity='.85'/%3E%3Cpath d='M470 590 l-30 40 l50 25 l20 60' fill='none' stroke='%23050302' stroke-width='1.7' stroke-opacity='.85'/%3E%3Cpath d='M1050 80 l45 25 l12 40' fill='none' stroke='%23050302' stroke-width='1.7' stroke-opacity='.85'/%3E%3Ccircle cx='60' cy='88' r='4' fill='%23050302'/%3E%3Ccircle cx='60' cy='88' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='520' cy='87' r='4' fill='%23050302'/%3E%3Ccircle cx='520' cy='87' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='990' cy='90' r='4' fill='%23050302'/%3E%3Ccircle cx='990' cy='90' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='1480' cy='86' r='4' fill='%23050302'/%3E%3Ccircle cx='1480' cy='86' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='300' cy='272' r='4' fill='%23050302'/%3E%3Ccircle cx='300' cy='272' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='860' cy='270' r='4' fill='%23050302'/%3E%3Ccircle cx='860' cy='270' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='1320' cy='275' r='4' fill='%23050302'/%3E%3Ccircle cx='1320' cy='275' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='140' cy='458' r='4' fill='%23050302'/%3E%3Ccircle cx='140' cy='458' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='700' cy='455' r='4' fill='%23050302'/%3E%3Ccircle cx='700' cy='455' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='1210' cy='460' r='4' fill='%23050302'/%3E%3Ccircle cx='1210' cy='460' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='420' cy='642' r='4' fill='%23050302'/%3E%3Ccircle cx='420' cy='642' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='1000' cy='640' r='4' fill='%23050302'/%3E%3Ccircle cx='1000' cy='640' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3Ccircle cx='1540' cy='645' r='4' fill='%23050302'/%3E%3Ccircle cx='1540' cy='645' r='5.5' fill='none' stroke='%239c8f6c' stroke-opacity='.2'/%3E%3C/svg%3E");--speck:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.4 2.7'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23s)'/%3E%3C/svg%3E")}
+.wood{background-image:radial-gradient(ellipse 85% 70% at 50% 42%,rgba(255,190,110,.13),transparent 72%),var(--planks),var(--blot),linear-gradient(180deg,#2d261b,#241e15);filter:saturate(.85) sepia(.15) contrast(1.08);box-shadow:inset 0 0 220px rgba(0,0,0,.92)}
+.ink{-webkit-mask-image:var(--speck);mask-image:var(--speck);-webkit-mask-size:90px 90px;mask-size:90px 90px;opacity:.84}
+.card-frame{outline:1px solid rgba(70,55,35,.45);outline-offset:2px}
+
+</style></head>
+<body><div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useReducer, useRef } = React;
+
+
+// --- CONSTANTS & GAME DATA ---
+const SUITS = ['♠', '♥', '♦', '♣'];
+// Faded, gritty colors for the wasteland
+const SUIT_COLORS = { 
+    '♠': 'text-[#1a1714]', 
+    '♣': 'text-[#1a1714]', 
+    '♥': 'text-[#7d221b]', 
+    '♦': 'text-[#7d221b]', 
+    '★': 'text-[#b8860b]' // Joker star in dirty gold
+};
+const CARD_VALUES = [
+    { value: 1, label: 'A' }, { value: 2, label: '2' }, { value: 3, label: '3' },
+    { value: 4, label: '4' }, { value: 5, label: '5' }, { value: 6, label: '6' },
+    { value: 7, label: '7' }, { value: 8, label: '8' }, { value: 9, label: '9' },
+    { value: 10, label: '10' }, { value: 11, label: 'J', isFace: true },
+    { value: 12, label: 'Q', isFace: true }, { value: 13, label: 'K', isFace: true }
+];
+
+// --- HELPER FUNCTIONS ---
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const createDeck = (owner, keys) => {
+    let deck = [];
+    SUITS.forEach(suit => {
+        CARD_VALUES.forEach(card => {
+            deck.push({ ...card, suit, key: suit + card.label, id: `${owner}-${generateId()}`, owner });
+        });
+    });
+    // Add 2 Jokers to each deck
+    deck.push({ value: 0, label: 'Jkr', isFace: true, suit: '★', id: `${owner}-${generateId()}-j1`, key: 'Jkr1', owner });
+    deck.push({ value: 0, label: 'Jkr', isFace: true, suit: '★', id: `${owner}-${generateId()}-j2`, key: 'Jkr2', owner });
+    
+    if (keys) deck = deck.filter(c => keys.includes(c.key));
+    // Shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+};
+
+const getStackValue = (stack) => {
+    let val = stack.baseCard.value;
+    const kings = stack.modifiers.filter(m => m.value === 13).length;
+    if (kings > 0) val = val * Math.pow(2, kings);
+    return val;
+};
+
+const getCaravanTotal = (caravan) => caravan.reduce((sum, stack) => sum + getStackValue(stack), 0);
+
+const getCaravanState = (caravan) => {
+    if (caravan.length === 0) return { direction: null, suit: null, topValue: null };
+
+    let direction = null;
+    for (let i = 1; i < caravan.length; i++) {
+        let prevVal = caravan[i - 1].baseCard.value;
+        let currVal = caravan[i].baseCard.value;
+        if (currVal > prevVal) direction = 'ASC';
+        else if (currVal < prevVal) direction = 'DESC';
+    }
+
+    const lastStack = caravan[caravan.length - 1];
+    const queens = lastStack.modifiers.filter(m => m.value === 12);
+    let effectiveSuit = lastStack.baseCard.suit;
+
+    if (queens.length > 0) {
+        effectiveSuit = queens[queens.length - 1].suit;
+        if (direction) {
+            for (let i = 0; i < queens.length; i++) {
+                direction = direction === 'ASC' ? 'DESC' : 'ASC';
+            }
+        }
+    }
+
+    return { direction, suit: effectiveSuit, topValue: lastStack.baseCard.value };
+};
+
+const isValidNumberPlay = (card, caravan) => {
+    if (caravan.length === 0) return true;
+    const state = getCaravanState(caravan);
+    
+    if (card.suit === state.suit) return true;
+    if (card.value === state.topValue) return false;
+    
+    if (caravan.length === 1) return true;
+
+    if (state.direction === 'ASC' && card.value > state.topValue) return true;
+    if (state.direction === 'DESC' && card.value < state.topValue) return true;
+
+    return false;
+};
+
+const checkTracksStatus = (tracks) => {
+    let resolvedCount = 0;
+    let userWins = 0;
+    let aiWins = 0;
+
+    const trackResults = tracks.map(t => {
+        const uTotal = getCaravanTotal(t.user);
+        const aTotal = getCaravanTotal(t.ai);
+        
+        const uValid = uTotal >= 21 && uTotal <= 26;
+        const aValid = aTotal >= 21 && aTotal <= 26;
+
+        let winner = null;
+        if (uValid && aValid) {
+            if (uTotal > aTotal) winner = 'USER';
+            else if (aTotal > uTotal) winner = 'AI';
+        } else if (uValid) {
+            winner = 'USER';
+        } else if (aValid) {
+            winner = 'AI';
+        }
+
+        if (winner) {
+            resolvedCount++;
+            if (winner === 'USER') userWins++;
+            else aiWins++;
+        }
+        return { uTotal, aTotal, winner };
+    });
+
+    return { resolvedCount, userWins, aiWins, isGameOver: resolvedCount === 3, trackResults };
+};
+
+// --- INITIAL STATE ---
+const getInitialState = (mode = 'AI', opts = {}) => {
+    const userDeck = createDeck('USER', opts.userKeys);
+    const aiDeck = createDeck('AI', opts.aiKeys);
+    return {
+        phase: 'SETUP',
+        mode,
+        turn: 'USER',
+        userDeck: userDeck.slice(5),
+        aiDeck: aiDeck.slice(5),
+        userHand: userDeck.slice(0, 5),
+        aiHand: aiDeck.slice(0, 5),
+        tracks: [ { user: [], ai: [] }, { user: [], ai: [] }, { user: [], ai: [] } ],
+        selectedCard: null,
+        message: mode === 'LOCAL' ? "Setup: Player 1, place a number card on an empty track." : "Setup Phase: Courier’s turn. Place a number card on an empty track.",
+        winner: null
+    };
+};
+
+// --- REDUCER ---
+function gameReducer(state, action) {
+    let newState = { ...state };
+    const drawCards = (st, owner) => {
+        const handKey = owner === 'USER' ? 'userHand' : 'aiHand';
+        const deckKey = owner === 'USER' ? 'userDeck' : 'aiDeck';
+        while (st[handKey].length < 5 && st[deckKey].length > 0) {
+            st[handKey] = [...st[handKey], st[deckKey][0]];
+            st[deckKey] = st[deckKey].slice(1);
+        }
+    };
+
+    const nextTurn = (st) => {
+        st.turn = st.turn === 'USER' ? 'AI' : 'USER';
+        const local = st.mode === 'LOCAL';
+        const base = local ? (st.turn === 'USER' ? "Player 1’s turn." : "Player 2’s turn.") : (st.turn === 'USER' ? "Your turn." : "Drifter is thinking...");
+        if (st.phase === 'SETUP') {
+            if (st.tracks.every(t => t.user.length > 0 && t.ai.length > 0)) { st.phase = 'PLAY'; st.message = "Game started! " + base; }
+            else st.message = "Setup: " + base;
+        } else st.message = base;
+
+        const { isGameOver, userWins, aiWins } = checkTracksStatus(st.tracks);
+        if (isGameOver) {
+            st.phase = 'GAME_OVER';
+            st.winner = userWins > aiWins ? 'USER' : 'AI';
+            st.message = local ? (st.winner === 'USER' ? "Player 1 takes the pot." : "Player 2 takes the pot.")
+                : (st.winner === 'USER' ? "You walked away with the caps." : "The Drifter cleaned you out.");
+        }
+    };
+
+    switch (action.type) {
+        case 'SELECT_CARD':
+            if ((state.mode !== 'LOCAL' && state.turn !== 'USER') || state.phase === 'GAME_OVER') return state;
+            return { ...state, selectedCard: action.card };
+
+        case 'PLAY_NUMBER': {
+            if (state.turn !== action.player || !action.card) return state;
+            if (action.card.isFace) return state;
+
+            const tIndex = action.trackIndex;
+            const targetCaravan = state.tracks[tIndex][action.player.toLowerCase()];
+            
+            if (state.phase === 'SETUP') {
+                if (targetCaravan.length > 0) {
+                    if (action.player === 'USER' || state.mode === 'LOCAL') return { ...state, message: "Setup Phase: Must place on an empty track." };
+                    return state;
+                }
+            } else if (!isValidNumberPlay(action.card, targetCaravan)) {
+                if (action.player === 'USER' || state.mode === 'LOCAL') return { ...state, message: "Invalid play. Check direction and suit rules." };
+                return state; 
+            }
+
+            const newTracks = [...state.tracks];
+            newTracks[tIndex][action.player.toLowerCase()] = [...targetCaravan, { baseCard: action.card, modifiers: [] }];
+            newState.tracks = newTracks;
+
+            const handKey = action.player === 'USER' ? 'userHand' : 'aiHand';
+            newState[handKey] = newState[handKey].filter(c => c.id !== action.card.id);
+            
+            newState.selectedCard = null;
+            drawCards(newState, action.player);
+            nextTurn(newState);
+            return newState;
+        }
+
+        case 'PLAY_FACE': {
+            if (state.turn !== action.player || state.phase === 'SETUP') return state;
+            const tIndex = action.trackIndex;
+            const tOwner = action.targetOwner.toLowerCase();
+            const sIndex = action.stackIndex;
+            
+            let newTracks = [...state.tracks];
+            let targetCaravan = [...newTracks[tIndex][tOwner]];
+            
+            if (action.card.value === 11) { // JACK
+                targetCaravan.splice(sIndex, 1);
+                newTracks[tIndex][tOwner] = targetCaravan;
+            } else if (action.card.label === 'Jkr') { // JOKER
+                const targetBaseValue = targetCaravan[sIndex].baseCard.value;
+                const targetBaseSuit = targetCaravan[sIndex].baseCard.suit;
+                
+                for (let ti = 0; ti < 3; ti++) {
+                    ['user', 'ai'].forEach(ownerKey => {
+                        newTracks[ti][ownerKey] = newTracks[ti][ownerKey].filter((stack, stackIdx) => {
+                            if (ti === tIndex && ownerKey === tOwner && stackIdx === sIndex) return true;
+                            if (targetBaseValue === 1) return stack.baseCard.suit !== targetBaseSuit;
+                            return stack.baseCard.value !== targetBaseValue;
+                        });
+                    });
+                }
+                
+                const updatedTargetCaravan = newTracks[tIndex][tOwner];
+                const updatedSIndex = updatedTargetCaravan.findIndex(s => s.baseCard.id === targetCaravan[sIndex].baseCard.id);
+                if (updatedSIndex !== -1) {
+                     let targetStack = { ...updatedTargetCaravan[updatedSIndex] };
+                     targetStack.modifiers = [...targetStack.modifiers, action.card];
+                     updatedTargetCaravan[updatedSIndex] = targetStack;
+                }
+            } else { // QUEEN/KING
+                let targetStack = { ...targetCaravan[sIndex] };
+                targetStack.modifiers = [...targetStack.modifiers, action.card];
+                targetCaravan[sIndex] = targetStack;
+                newTracks[tIndex][tOwner] = targetCaravan;
+            }
+            
+            newState.tracks = newTracks;
+
+            const handKey = action.player === 'USER' ? 'userHand' : 'aiHand';
+            newState[handKey] = newState[handKey].filter(c => c.id !== action.card.id);
+            
+            newState.selectedCard = null;
+            drawCards(newState, action.player);
+            nextTurn(newState);
+            return newState;
+        }
+
+        case 'DISCARD': {
+            if (state.turn !== action.player || state.phase === 'SETUP') return state;
+            const handKey = action.player === 'USER' ? 'userHand' : 'aiHand';
+            newState[handKey] = newState[handKey].filter(c => c.id !== action.card.id);
+            newState.selectedCard = null;
+            drawCards(newState, action.player);
+            nextTurn(newState);
+            return newState;
+        }
+
+        case 'DISBAND': {
+             if (state.turn !== action.player || state.phase === 'SETUP') return state;
+             newState.tracks[action.trackIndex][action.player.toLowerCase()] = [];
+             newState.message = `Disbanded caravan on route ${action.trackIndex + 1}.`;
+             nextTurn(newState);
+             return newState;
+        }
+
+        case 'PASS': {
+            if (state.turn !== action.player) return state;
+            newState.selectedCard = null;
+            nextTurn(newState);
+            return newState;
+        }
+
+        case 'RESET':
+            return getInitialState(action.mode || state.mode, action.opts);
+
+        default:
+            return state;
+    }
+}
+
+// --- COMPONENTS ---
+const BackCtx = React.createContext('lucky38');
+const BACKS = {
+    lucky38: { name: 'Lucky 38', bg: '#3e1512', fg: '#b99a5e', mark: '38' },
+    tops: { name: 'The Tops', bg: '#1a2638', fg: '#b59a55', mark: 'TOPS' },
+    gomorrah: { name: 'Gomorrah', bg: '#34172f', fg: '#b05a76', mark: 'G' },
+    ultra: { name: 'Ultra-Luxe', bg: '#16322a', fg: '#a89c66', mark: 'UL' },
+};
+const BackFace = ({ id, className = '' }) => {
+    const b = BACKS[id] || BACKS.lucky38;
+    return (
+        <div className={`${className} rounded-[5px] border border-black/80 shadow-[0_1px_0_#7d7157,0_2px_0_#5f553f,0_5px_9px_rgba(0,0,0,0.75)] relative overflow-hidden shrink-0 worn`} style={{ background: '#b3a787', padding: 2.5 }}>
+            <div className="w-full h-full rounded-[3px] relative overflow-hidden flex items-center justify-center" style={{ background: `repeating-linear-gradient(45deg, ${b.fg}33 0 1px, transparent 1px 7px), repeating-linear-gradient(-45deg, ${b.fg}33 0 1px, transparent 1px 7px), radial-gradient(circle, ${b.bg}, #000 230%)` }}>
+                <div className="absolute inset-[3px] rounded-[2px] border" style={{ borderColor: b.fg + '88' }} />
+                <div className="rounded-full flex items-center justify-center font-serif font-black w-[58%] aspect-square border-2 text-[9px] sm:text-xs leading-none" style={{ borderColor: b.fg, color: b.fg, background: b.bg }}>{b.mark}</div>
+            </div>
+        </div>
+    );
+};
+const PIPS = { 2: [0, 1, 0], 3: [0, 3, 0], 4: [2, 0, 2], 5: [2, 1, 2], 6: [3, 0, 3], 7: [3, 1, 3], 8: [3, 2, 3], 9: [4, 1, 4], 10: [4, 2, 4] };
+
+// Draw animation: card travels from the deck to its slot; when `flip` it turns from face-down to face-up on the way.
+const useDrawAnim = (id, flip, delay) => {
+    const ref = React.useRef(null);
+    React.useLayoutEffect(() => {
+        const el = ref.current; if (!el || !el.animate) return;
+        const d = [id, id + '-chip'].map(x => document.getElementById(x)).map(x => x && x.getBoundingClientRect()).find(r => r && r.width)
+            || { left: window.innerWidth - 60, top: flip ? window.innerHeight + 40 : -100, width: 40, height: 60 };
+        const a = el.getBoundingClientRect();
+        const dx = d.left + d.width / 2 - (a.left + a.width / 2), dy = d.top + d.height / 2 - (a.top + a.height / 2);
+        el.animate([
+            { transform: `translate(${dx}px, ${dy}px) rotateY(${flip ? 180 : 0}deg) scale(.85)`, offset: 0 },
+            { transform: `translate(${dx * 0.4}px, ${dy * 0.4 - 40}px) rotateY(${flip ? 100 : 0}deg) scale(1.05)`, offset: 0.55 },
+            { transform: 'none', offset: 1 }], { duration: 700, delay, easing: 'cubic-bezier(.25,.7,.3,1)', fill: 'backwards' });
+    }, []);
+    return ref;
+};
+const DealWrap = ({ i, children }) => {
+    const back = React.useContext(BackCtx);
+    const ref = useDrawAnim('deck-me', true, i * 70);
+    const hide = { backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' };
+    return (
+        <div ref={ref} className="relative cardsz shrink-0" style={{ transformStyle: 'preserve-3d' }}>
+            <div style={hide}>{children}</div>
+            <div className="absolute inset-0" style={{ ...hide, transform: 'rotateY(180deg)' }}><BackFace id={back} className="w-full h-full" /></div>
+        </div>
+    );
+};
+const OppCard = ({ i, children }) => { const ref = useDrawAnim('deck-opp', false, i * 70); return <div ref={ref}>{children}</div>; };
+
+const CardView = ({ card, isSelected, onClick, hidden = false, deal = false, i = 0 }) => {
+    const back = React.useContext(BackCtx);
+    if (!card && !hidden) return null;
+    if (hidden) return <BackFace id={back} className="cardsz" />;
+    const col = SUIT_COLORS[card.suit], jk = card.label === 'Jkr';
+    const h = [...String(card.id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7) >>> 0;
+    const wear = { '--sx': `${h % 70 + 10}%`, '--sy': `${(h >>> 3) % 70 + 10}%`, '--tx': `${(h >>> 6) % 70 + 10}%`, '--ty': `${(h >>> 9) % 70 + 10}%`, rotate: `${((h >>> 12) % 7 - 3) * 0.7}deg` };
+    const idx = <><div className="text-xs sm:text-sm ci1">{jk ? '★' : card.label}</div>{!jk && <div className="text-[10px] sm:text-xs ci2">{card.suit}</div>}</>;
+    const face = (
+        <div onClick={onClick} style={wear}
+            className={`cardsz rounded-[5px] border border-[#5e5440] bg-gradient-to-br from-[#c4b99a] to-[#968a69] worn relative select-none cursor-pointer transition-transform shadow-[0_1px_0_#7d7157,0_2px_0_#5f553f,0_5px_9px_rgba(0,0,0,0.75)] shrink-0 ${isSelected ? 'ring-2 ring-[#c9ab62] ring-offset-2 ring-offset-[#24150a] -translate-y-2' : 'hover:-translate-y-1'}`}>
+            <div className={`absolute top-0.5 left-1 leading-none text-center font-serif font-black ink ${col}`}>{idx}</div>
+            <div className={`absolute bottom-0.5 right-1 leading-none text-center font-serif font-black ink rotate-180 ${col}`}>{idx}</div>
+            <div className={`absolute inset-x-4 sm:inset-x-5 inset-y-3 sm:inset-y-4 flex items-center justify-between ink ${col}`}>
+                {card.isFace ? (
+                    <div className="w-full h-full border border-[#5e5440] rounded-[2px] flex flex-col items-center justify-center font-serif font-black bg-black/[0.05] card-frame">
+                        <span className="text-3xl sm:text-4xl leading-none cf">{jk ? '★' : card.label}</span>
+                        {jk ? <span className="text-[7px] tracking-widest">JOKER</span> : <span className="text-lg leading-none cs">{card.suit}</span>}
+                    </div>
+                ) : card.value === 1 ? <span className="mx-auto text-4xl sm:text-5xl ca">{card.suit}</span> : PIPS[card.value].map((n, c) => (
+                    <div key={c} className="flex flex-col justify-around h-full text-sm sm:text-lg leading-none cp">{Array.from({ length: n }, (_, k) => <span key={k}>{card.suit}</span>)}</div>
+                ))}
+            </div>
+        </div>
+    );
+    return deal ? <DealWrap i={i}>{face}</DealWrap> : face;
+};
+
+const StackView = ({ stack, stackIndex, trackIndex, owner, onTargetClick, highlightTarget }) => {
+    const val = getStackValue(stack);
+    return (
+        <div className="relative flex justify-center group" onClick={() => onTargetClick(trackIndex, owner, stackIndex)}>
+            <div className={`relative z-10 transition-transform group-hover:-translate-y-1 ${highlightTarget ? 'ring-2 ring-[#c9ab62] rounded-lg cursor-pointer animate-pulse' : ''}`}>
+                <CardView card={stack.baseCard} onClick={() => {}} />
+            </div>
+            <div className="absolute top-1 flex items-center gap-0.5 z-20 pointer-events-none" style={{ left: 'calc(50% + var(--cw) * 0.55)' }}>
+                <div key={val} className="brass-dot anim-pop">{val}</div>
+                {stack.modifiers.map(m => (
+                    <div key={m.id} className={`anim-deal bg-[#b9ac8a] rounded-sm px-0.5 text-[10px] font-black font-serif border border-[#8b7a5c] leading-tight ${SUIT_COLORS[m.suit]}`}>{m.label === 'Jkr' ? '★' : m.label + m.suit}</div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+
+    const determineAIMove = (st) => {
+        const { aiHand, tracks, phase } = st;
+        const numberCards = aiHand.filter(c => !c.isFace);
+        const faceCards = aiHand.filter(c => c.isFace);
+
+        if (phase === 'SETUP') {
+            const emptyTrackIndex = tracks.findIndex(t => t.ai.length === 0);
+            if (emptyTrackIndex !== -1 && numberCards.length > 0) {
+                return { type: 'PLAY_NUMBER', player: 'AI', card: numberCards[0], trackIndex: emptyTrackIndex };
+            }
+        }
+
+        for (let card of numberCards) {
+            for (let tIndex = 0; tIndex < 3; tIndex++) {
+                const aiCaravan = tracks[tIndex].ai;
+                if (isValidNumberPlay(card, aiCaravan)) {
+                    const currentTotal = getCaravanTotal(aiCaravan);
+                    const newValue = currentTotal + card.value; 
+                    if (newValue >= 21 && newValue <= 26) {
+                        return { type: 'PLAY_NUMBER', player: 'AI', card, trackIndex: tIndex };
+                    }
+                }
+            }
+        }
+
+        for (let card of numberCards) {
+             for (let tIndex = 0; tIndex < 3; tIndex++) {
+                const aiCaravan = tracks[tIndex].ai;
+                if (isValidNumberPlay(card, aiCaravan)) {
+                    const currentTotal = getCaravanTotal(aiCaravan);
+                    if (currentTotal + card.value < 21) {
+                         return { type: 'PLAY_NUMBER', player: 'AI', card, trackIndex: tIndex };
+                    }
+                }
+             }
+        }
+
+        if (phase === 'PLAY' && faceCards.length > 0) {
+            for (let card of faceCards) {
+                if (card.value === 13) { 
+                    for (let tIndex = 0; tIndex < 3; tIndex++) {
+                        const userCaravan = tracks[tIndex].user;
+                        const userTotal = getCaravanTotal(userCaravan);
+                        if (userTotal >= 21 && userTotal <= 26 && userCaravan.length > 0) {
+                            let highestStackIndex = 0;
+                            let maxVal = 0;
+                            userCaravan.forEach((s, i) => { if(s.baseCard.value > maxVal) { maxVal = s.baseCard.value; highestStackIndex = i; }});
+                            return { type: 'PLAY_FACE', player: 'AI', card, trackIndex: tIndex, targetOwner: 'USER', stackIndex: highestStackIndex };
+                        }
+                    }
+                }
+                if (card.value === 11) { 
+                    for (let tIndex = 0; tIndex < 3; tIndex++) {
+                        const userCaravan = tracks[tIndex].user;
+                        if (getCaravanTotal(userCaravan) >= 15 && userCaravan.length > 0) {
+                             return { type: 'PLAY_FACE', player: 'AI', card, trackIndex: tIndex, targetOwner: 'USER', stackIndex: userCaravan.length - 1 };
+                        }
+                    }
+                }
+                if (card.label === 'Jkr') { 
+                    for (let tIndex = 0; tIndex < 3; tIndex++) {
+                        const userCaravan = tracks[tIndex].user;
+                        if (getCaravanTotal(userCaravan) >= 21 && userCaravan.length > 0) {
+                             return { type: 'PLAY_FACE', player: 'AI', card, trackIndex: tIndex, targetOwner: 'USER', stackIndex: userCaravan.length - 1 };
+                        }
+                    }
+                }
+            }
+        }
+
+        if (numberCards.length > 0) {
+            numberCards.sort((a,b) => a.value - b.value);
+            return { type: 'DISCARD', player: 'AI', card: numberCards[0] };
+        }
+        
+        if (aiHand.length > 0) {
+            return { type: 'DISCARD', player: 'AI', card: aiHand[0] };
+        }
+
+        return null;
+    };
+
+
+const ls = { get: (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const ALL_KEYS = [...SUITS.flatMap(s => CARD_VALUES.map(c => s + c.label)), 'Jkr1', 'Jkr2'];
+// --- SOUND (synthesised with Web Audio: no files, no music) ---
+const SFX = (() => {
+    let ctx = null, buf = null, master = null, muted = false;
+    const init = () => {
+        if (!ctx) {
+            try {
+                ctx = new (window.AudioContext || window.webkitAudioContext)();
+                master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
+                const n = ctx.sampleRate * 2; buf = ctx.createBuffer(1, n, ctx.sampleRate);
+                const d = buf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+            } catch (e) { ctx = null; return false; }
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        return true;
+    };
+    const R = (a, b) => a + Math.random() * (b - a);
+    const noise = (t, dur, type, f1, q, vol, f2) => {
+        const s = ctx.createBufferSource(); s.buffer = buf;
+        const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f1, t);
+        if (f2) f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+        const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        s.connect(f); f.connect(g); g.connect(master); s.start(t, R(0, 1.5), dur + 0.05);
+    };
+    const tone = (t, f1, f2, dur, vol, type = 'sine') => {
+        const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+        const g = ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+    };
+    const sounds = {
+        tick: t => noise(t, 0.025, 'bandpass', 1800, 1, 0.12),
+        flick: t => { noise(t, 0.05, 'highpass', 3000, 0.7, 0.22); noise(t, 0.04, 'bandpass', 1800, 1, 0.12); },
+        place: t => { tone(t, 150, 55, 0.12, 0.5); noise(t, 0.09, 'lowpass', 500, 0.7, 0.5); noise(t, 0.02, 'bandpass', 2500, 1, 0.3); },
+        discard: t => { noise(t, 0.12, 'bandpass', 2500, 0.8, 0.22, 900); },
+        swish: t => noise(t, 0.28, 'bandpass', 3200, 0.8, 0.3, 700),
+        shuffle: t => { for (let k = 0; k < 20; k++) noise(t + k * 0.027, 0.035, 'bandpass', R(2200, 4000), 1, R(0.12, 0.22)); tone(t + 0.58, 120, 60, 0.1, 0.3); noise(t + 0.58, 0.06, 'lowpass', 600, 0.7, 0.3); },
+        caps: (t, n = 3) => { for (let k = 0; k < n; k++) { const s = t + k * 0.065 + R(0, 0.03), p = R(2600, 5200); tone(s, p, p * 0.97, 0.07, 0.07, 'triangle'); tone(s, p * 2.76, p * 2.7, 0.04, 0.04, 'triangle'); noise(s, 0.025, 'highpass', 5500, 0.7, 0.14); } },
+        pencil: t => {
+            const dur = 0.42, s = ctx.createBufferSource(); s.buffer = buf;
+            const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 2.5; f.frequency.setValueAtTime(1800, t); f.frequency.linearRampToValueAtTime(3400, t + dur);
+            const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+            for (let x = 0.01; x < dur; x += 0.009) g.gain.setValueAtTime(R(0.04, 0.26), t + x);
+            g.gain.setValueAtTime(0.0001, t + dur);
+            s.connect(f); f.connect(g); g.connect(master); s.start(t, R(0, 1.5), dur + 0.05);
+        },
+        glass: t => {
+            noise(t, 0.18, 'highpass', 2200, 0.7, 0.55); noise(t, 0.25, 'bandpass', 900, 0.8, 0.22);
+            for (let k = 0; k < 16; k++) noise(t + R(0.03, 0.8), R(0.04, 0.12), 'bandpass', R(2500, 9000), 18, R(0.15, 0.4));
+        },
+        thud: t => { tone(t, 110, 42, 0.4, 0.55); noise(t, 0.2, 'lowpass', 300, 0.7, 0.4); },
+    };
+    return {
+        play: (name, arg) => { if (muted || !sounds[name] || !init()) return; try { sounds[name](ctx.currentTime + 0.005, arg); } catch (e) {} },
+        setMuted: (v) => { muted = v; },
+    };
+})();
+SFX.setMuted(ls.get('caravan_mute', false));
+
+const fan = (i, n, sel, dir = 1) => {
+    const step = Math.min(11, 55 / Math.max(n, 1)), a = (i - (n - 1) / 2) * step * dir, w = dir > 0 ? 'var(--cw)' : 'var(--ow)';
+    return { transform: `rotate(${a}deg) translateY(${sel ? -30 : 0}px)`, transformOrigin: dir > 0 ? '50% 200%' : '50% -100%', marginLeft: i ? `calc(${w} * -1)` : 0, zIndex: sel ? 50 : i, transition: 'transform .2s', flexShrink: 0, perspective: 800 };
+};
+const ROUTE_TOP = ['Dry Wells', 'Scrapyard', 'Salt Flats'], ROUTE_BOT = ['Copper Gulch', 'Old Mile', 'The Crossing'];
+const HudRow = ({ l, v }) => <div className="flex justify-between gap-6"><span>{l}:</span><span>{v}</span></div>;
+const DeckPile = ({ id, n, small }) => {
+    const back = React.useContext(BackCtx);
+    return (
+        <div id={id} className={`relative ${small ? 'pile-s' : 'pile'}`}>
+            {n > 0 ? Array.from({ length: Math.min(5, Math.ceil(n / 7)) }, (_, k) => <div key={k} className="absolute inset-0" style={{ transform: `translate(${k * 1.5}px, ${-k * 1.5}px)` }}><BackFace id={back} className="w-full h-full" /></div>)
+                : <div className="w-full h-full border-2 border-dashed border-[#e0a040]/40 rounded-md" />}
+            <div className="absolute -bottom-1 -right-7 hud text-base">{n}</div>
+        </div>
+    );
+};
+const Lbl = ({ children }) => <p className="text-xs text-[#c9b48a] uppercase tracking-widest mb-1 mt-3">{children}</p>;
+const MULT = { EASY: 1, NORMAL: 1.5, HARD: 2 };
+const loadCaps = () => { try { const v = parseInt(localStorage.getItem('caravan_caps')); return isNaN(v) ? 100 : v; } catch (e) { return 100; } };
+const saveCaps = (n) => { try { localStorage.setItem('caravan_caps', String(n)); } catch (e) {} };
+
+const legalActions = (st) => {
+    const acts = [];
+    st.aiHand.forEach(card => {
+        for (let t = 0; t < 3; t++) {
+            if (!card.isFace) {
+                const c = st.tracks[t].ai;
+                if (st.phase === 'SETUP' ? c.length === 0 : isValidNumberPlay(card, c))
+                    acts.push({ type: 'PLAY_NUMBER', player: 'AI', card, trackIndex: t });
+            } else if (st.phase === 'PLAY') {
+                ['user', 'ai'].forEach(o => st.tracks[t][o].forEach((s, i, arr) => {
+                    if (card.value === 12 && i !== arr.length - 1) return;
+                    acts.push({ type: 'PLAY_FACE', player: 'AI', card, trackIndex: t, targetOwner: o.toUpperCase(), stackIndex: i });
+                }));
+            }
+        }
+        if (st.phase === 'PLAY') acts.push({ type: 'DISCARD', player: 'AI', card });
+    });
+    return acts;
+};
+const simulate = (st, act) => { const s = gameReducer(structuredClone(st), act); return s.turn !== st.turn ? s : null; };
+const evalState = (s) => {
+    let sc = 0;
+    const f = x => x > 26 ? -15 : x >= 21 ? 60 + x : x * 2;
+    s.tracks.forEach(t => {
+        const a = getCaravanTotal(t.ai), u = getCaravanTotal(t.user);
+        const av = a >= 21 && a <= 26, uv = u >= 21 && u <= 26;
+        sc += f(a) - 0.9 * f(u);
+        if (av && (!uv || a > u)) sc += 40;
+        if (uv && (!av || u > a)) sc -= 40;
+    });
+    const r = checkTracksStatus(s.tracks);
+    if (r.isGameOver) sc += r.aiWins > r.userWins ? 1000 : -1000;
+    return sc;
+};
+const pickAI = (st, diff) => {
+    const acts = legalActions(st);
+    if (diff === 'HARD') {
+        let best = null, bs = -Infinity;
+        acts.forEach(a => {
+            const s = simulate(st, a); if (!s) return;
+            let sc = evalState(s) + Math.random() * 2;
+            if (a.type === 'DISCARD') sc -= 4 + (a.card.isFace ? 10 : 0);
+            if (sc > bs) { bs = sc; best = a; }
+        });
+        if (best) return best;
+    }
+    if (diff === 'EASY') {
+        const nums = acts.filter(a => a.type === 'PLAY_NUMBER'), dis = acts.filter(a => a.type === 'DISCARD');
+        const pool = (st.phase === 'PLAY' && Math.random() < 0.3 && dis.length) ? dis : (nums.length ? nums : dis);
+        if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+    }
+    const n = determineAIMove(st);
+    if (n && simulate(st, n)) return n;
+    return acts.find(a => simulate(st, a)) || { type: 'PASS', player: 'AI' };
+};
+
+const Cap = ({ s = 22, i = 0 }) => (
+    <span className="chip inline-block rounded-full relative shrink-0" style={{ width: s, height: s, background: 'repeating-conic-gradient(#a39e94 0 10deg,#4d4a44 10deg 20deg)', boxShadow: '0 1px 3px rgba(0,0,0,.9)', animationDelay: `${i * 35}ms`, rotate: `${(i * 47) % 360}deg` }}>
+        <span className="absolute rounded-full" style={{ inset: s * 0.14, backgroundImage: 'var(--blot), radial-gradient(circle at 35% 30%,#b0483a,#7a1f16 55%,#3a0b07)', backgroundBlendMode: 'multiply', boxShadow: 'inset 0 0 3px rgba(0,0,0,.8)' }} />
+    </span>
+);
+const Bill = ({ i = 0 }) => (
+    <span className="block relative rounded-[2px] border border-[#1b241a] shadow-[0_1px_3px_rgba(0,0,0,0.9)]" style={{ width: 46, height: 22, backgroundImage: 'linear-gradient(100deg,transparent 47%,rgba(0,0,0,.35) 50%,transparent 53%), var(--blot), linear-gradient(90deg,#4d5b44,#78866a,#4d5b44)', rotate: `${(i * 53) % 7 - 3}deg` }}>
+        <span className="absolute inset-[2px] border border-[#c9d4b8]/40 flex items-center justify-center text-[9px] font-black text-[#d5dcc6]/80 tracking-wider">NCR $</span>
+    </span>
+);
+// 1 NCR bill = 50 caps; 1 drawn cap = 5 caps. Piles are slightly messy on purpose.
+const Money = ({ amount }) => {
+    const bills = Math.min(Math.floor(amount / 50), 6), caps = Math.min(Math.ceil((amount % 50) / 5), 10);
+    const cols = []; for (let c = caps; c > 0; c -= 5) cols.push(Math.min(5, c));
+    return (
+        <div className="flex items-end justify-center gap-1.5 h-14">
+            {bills > 0 && <div className="relative chip" style={{ width: 50, height: 24 + (bills - 1) * 5 }}>{Array.from({ length: bills }, (_, i) => <div key={i} className="absolute" style={{ bottom: i * 5, left: (i * 37) % 5 - 2 }}><Bill i={i} /></div>)}</div>}
+            {cols.map((n, c) => <div key={c} className="relative" style={{ width: 24, height: 22 + (n - 1) * 5 }}>{Array.from({ length: n }, (_, i) => <div key={i} className="absolute" style={{ bottom: i * 5, left: (i * 53 + c * 7) % 5 - 1 }}><Cap i={i + c * 5} /></div>)}</div>)}
+        </div>
+    );
+};
+const Opt = ({ on, disabled, onClick, children }) => (
+    <button disabled={disabled} onClick={(e) => { SFX.play('tick'); onClick && onClick(e); }} className={`px-3 py-2 rounded-md border text-xs font-bold uppercase tracking-wider transition-all flex flex-col items-center justify-end gap-1 ${on ? 'bg-[#3a3024] border-[#b59a55] text-[#d8c280] shadow-[0_0_10px_rgba(0,0,0,0.8)] -translate-y-0.5' : 'bg-[#14100c]/80 border-[#3a3026] text-[#8a7d66] hover:border-[#6b5a35]'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}>{children}</button>
+);
+const Btn = ({ onClick, disabled, children }) => (
+    <button onClick={(e) => { SFX.play('tick'); onClick && onClick(e); }} disabled={disabled} className={`px-4 py-2 text-sm uppercase tracking-wider rounded-md font-bold border transition-all ${disabled ? 'bg-[#14100c] border-[#2a2218] text-[#5a4f40] cursor-not-allowed' : 'bg-gradient-to-b from-[#4a4034] to-[#2b241c] border-[#0f0b07] text-[#cbb98f] hover:brightness-110 shadow-[0_2px_5px_rgba(0,0,0,0.8)]'}`}>{children}</button>
+);
+
+// Stacks are absolutely positioned and squeeze together when the caravan grows, so the page never gets taller.
+const Caravan = ({ caravan, tIndex, owner, extra, onTarget, canTarget, faceSel, anim }) => {
+    const n = caravan.length + (extra ? 1 : 0);
+    const topFor = (i) => n <= 1 ? '0px' : `min(calc(var(--off) * ${i}), calc((100% - var(--ch)) * ${i} / ${n - 1}))`;
+    return (
+        <div className="relative w-full flex-1 min-h-[calc(var(--ch)+70px)]">
+            {caravan.map((stack, i) => (
+                <div key={stack.baseCard.id} className={`absolute inset-x-0 ${anim}`} style={{ top: topFor(i), zIndex: i, translate: `${([...String(stack.baseCard.id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 3) >>> 0) % 11 - 5}px 0` }}>
+                    <StackView stack={stack} stackIndex={i} trackIndex={tIndex} owner={owner} onTargetClick={onTarget}
+                        highlightTarget={canTarget && faceSel && (faceSel.value !== 12 || i === caravan.length - 1)} />
+                </div>
+            ))}
+            {extra && <div className="absolute inset-x-0 flex justify-center" style={{ top: topFor(caravan.length), zIndex: caravan.length }}>{extra}</div>}
+        </div>
+    );
+};
+
+function CaravanGame() {
+    const [state, dispatch] = useReducer(gameReducer, 'AI', getInitialState);
+    const [screen, setScreen] = useState('MENU');
+    const [started, setStarted] = useState(false);
+    const [settings, setSettings] = useState({ mode: 'AI', difficulty: 'NORMAL', bet: 10 });
+    const [caps, setCaps] = useState(loadCaps);
+    const [payout, setPayout] = useState(null);
+    const [handover, setHandover] = useState(false);
+    const [armed, setArmed] = useState(null);
+    const [disbandMode, setDisbandMode] = useState(false);
+    const [wl, setWl] = useState(() => ls.get('caravan_wl', [0, 0]));
+    const settled = useRef(false);
+    const [back, setBack] = useState(() => ls.get('caravan_back', 'lucky38'));
+    const [deckKeys, setDeckKeys] = useState(() => ls.get('caravan_deck', null));
+    const [draft, setDraft] = useState(null);
+    const toggleCard = (k) => setDraft(d => d.includes(k) ? d.filter(x => x !== k) : [...d, k]);
+    const prevTurn = useRef(state.turn);
+    const { phase, turn, mode, userHand, aiHand, tracks, selectedCard, message, winner } = state;
+    const trackStatus = checkTracksStatus(tracks);
+    const [muted, setMuted] = useState(() => ls.get('caravan_mute', false));
+    const toggleMute = () => { const v = !muted; setMuted(v); SFX.setMuted(v); ls.set('caravan_mute', v); };
+    const sig = useRef(null), skip = useRef(false);
+    useEffect(() => {
+        const cur = {}; let cnt = 0, mods = 0;
+        tracks.forEach((t, ti) => ['user', 'ai'].forEach(o => { cur[ti + o] = getCaravanTotal(t[o]); cnt += t[o].length; mods += t[o].reduce((a, st) => a + st.modifiers.length, 0); }));
+        const prev = sig.current; sig.current = { cur, cnt, mods, turn };
+        if (skip.current) { skip.current = false; return; }
+        if (!prev) return;
+        const inR = v => v >= 21 && v <= 26;
+        let glass = false, pencil = false;
+        Object.keys(cur).forEach(k => { if (cur[k] > 26 && prev.cur[k] <= 26) glass = true; else if (inR(cur[k]) && !inR(prev.cur[k])) pencil = true; });
+        if (cnt < prev.cnt) SFX.play('swish');
+        else if (cnt > prev.cnt || mods > prev.mods) { SFX.play('place'); setTimeout(() => SFX.play('flick'), 130); }
+        else if (prev.turn !== turn) SFX.play('discard');
+        if (glass) setTimeout(() => SFX.play('glass'), 200); else if (pencil) setTimeout(() => SFX.play('pencil'), 200);
+    }, [tracks, turn]);
+    const local = mode === 'LOCAL';
+    const me = local ? turn : 'USER';
+    const opp = me === 'USER' ? 'AI' : 'USER';
+    const canAct = phase !== 'GAME_OVER' && screen === 'GAME' && (local ? !handover : turn === 'USER');
+    const myHand = me === 'USER' ? userHand : aiHand;
+    const oppHand = me === 'USER' ? aiHand : userHand;
+    const myDeck = me === 'USER' ? state.userDeck : state.aiDeck;
+    const oppDeck = me === 'USER' ? state.aiDeck : state.userDeck;
+    const names = local ? { USER: 'PLAYER 1', AI: 'PLAYER 2' } : { USER: 'COURIER', AI: 'DRIFTER' };
+    const faceSel = selectedCard && selectedCard.isFace ? selectedCard : null;
+    const numSel = selectedCard && !selectedCard.isFace;
+
+    useEffect(() => {
+        if (mode !== 'AI' || turn !== 'AI' || phase === 'GAME_OVER') return;
+        const t = setTimeout(() => dispatch(pickAI(state, settings.difficulty)), settings.difficulty === 'HARD' ? 1400 : 1800);
+        return () => clearTimeout(t);
+    }, [turn, phase, mode]);
+
+    useEffect(() => {
+        if (local && screen === 'GAME' && phase !== 'GAME_OVER' && prevTurn.current !== turn) setHandover(true);
+        prevTurn.current = turn; setArmed(null); setDisbandMode(false);
+    }, [turn]);
+
+    useEffect(() => {
+        if (phase !== 'GAME_OVER') { settled.current = false; return; }
+        if (settled.current) return;
+        settled.current = true;
+        if (mode === 'AI') setWl(w => { const n = winner === 'USER' ? [w[0] + 1, w[1]] : [w[0], w[1] + 1]; ls.set('caravan_wl', n); return n; });
+        if (mode === 'AI' && settings.bet > 0) {
+            const d = winner === 'USER' ? Math.round(settings.bet * MULT[settings.difficulty]) : -settings.bet;
+            setPayout(d); setTimeout(() => d > 0 ? SFX.play('caps', 8) : SFX.play('thud'), 600);
+            setCaps(c => { const n = Math.max(0, c + d); saveCaps(n); return n; });
+        } else setPayout(null);
+    }, [phase]);
+
+    const canStart = settings.mode === 'LOCAL' || settings.bet <= caps;
+    const start = () => {
+        if (!canStart) return;
+        SFX.play('shuffle'); skip.current = true;
+        const rk = [...ALL_KEYS].sort(() => Math.random() - 0.5).slice(0, 30 + Math.floor(Math.random() * 25));
+        dispatch({ type: 'RESET', mode: settings.mode, opts: { userKeys: deckKeys, aiKeys: settings.mode === 'LOCAL' ? deckKeys : rk } });
+        setPayout(null); setStarted(true); setScreen('GAME'); setHandover(settings.mode === 'LOCAL');
+    };
+    const scavenge = () => { SFX.play('caps', 5); const n = caps + 25; setCaps(n); saveCaps(n); setSettings(s => ({ ...s, bet: Math.min(s.bet, 10) })); };
+
+    const onCard = (card) => { if (canAct) { SFX.play('flick'); dispatch({ type: 'SELECT_CARD', card }); } };
+    const onDrop = (t) => { if (numSel && canAct) dispatch({ type: 'PLAY_NUMBER', player: me, card: selectedCard, trackIndex: t }); };
+    const onStack = (t, owner, i) => {
+        if (!faceSel || !canAct) return;
+        if (faceSel.value === 12 && i !== tracks[t][owner.toLowerCase()].length - 1) return;
+        dispatch({ type: 'PLAY_FACE', player: me, card: faceSel, trackIndex: t, targetOwner: owner, stackIndex: i });
+    };
+    const onDiscard = () => { if (selectedCard && phase === 'PLAY' && canAct) dispatch({ type: 'DISCARD', player: me, card: selectedCard }); };
+    const onDisband = (t) => { dispatch({ type: 'DISBAND', trackIndex: t, player: me }); setDisbandMode(false); };
+    const tc = (v) => v >= 21 && v <= 26 ? 'text-[#8fa56a]' : v > 26 ? 'text-[#b0463a]' : 'text-[#a8997c]';
+
+    const cancelSel = () => { setDisbandMode(false); if (selectedCard) dispatch({ type: 'SELECT_CARD', card: null }); };
+    const cycleCard = () => { if (!myHand.length) return; const i = myHand.findIndex(c => c.id === selectedCard?.id); onCard(myHand[(i + 1) % myHand.length]); };
+    useEffect(() => {
+        const h = (e) => { if (screen !== 'GAME' || !canAct || e.metaKey || e.ctrlKey) return; const k = e.key.toLowerCase();
+            if (k === 'w') cycleCard(); else if (k === 'q') onDiscard(); else if (k === 'e' && phase === 'PLAY') setDisbandMode(m => !m); else if (k === 'r') cancelSel(); };
+        window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h);
+    });
+
+    return (
+        <BackCtx.Provider value={back}>
+        <div className="relative min-h-[100dvh] flex flex-col p-2 sm:p-4 lg:p-6 text-[#f1e4c4] selection:bg-none overflow-hidden wood">
+            <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.9)] pointer-events-none z-0"></div>
+            <div className="absolute inset-0 pointer-events-none z-40 film"></div>
+
+            {/* Header */}
+            <div className="relative z-10 flex flex-wrap justify-between items-start mb-2 px-2 gap-2">
+                <div className="flex flex-col">
+                    <h1 className="title-font text-2xl sm:text-4xl text-[#c9a860] drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none">CARAVAN</h1>
+                </div>
+                <div className="flex-1 min-w-[160px] text-center self-center lg:hidden">
+                    <span className={`hud text-sm sm:text-base ${canAct ? '' : 'opacity-60'}`}>{message}</span>
+                </div>
+                <div className="hud text-sm sm:text-base lg:text-xl w-[190px] sm:w-[230px] lg:w-[320px] leading-snug">
+                    {!local && <HudRow l="Ante Pot" v={settings.bet} />}
+                    {!local && <HudRow l="Net Total" v={caps} />}
+                    {!local && <HudRow l="Win/Loss" v={`${wl[0]}/${wl[1]}`} />}
+                    {phase !== 'SETUP' && <HudRow l={local ? 'P1 / P2 routes' : 'Routes'} v={`${trackStatus.userWins}/${trackStatus.aiWins}`} />}
+                    <div className="flex justify-end gap-4 mt-1 text-xs opacity-80">
+                        <button className="hud-cmd" onClick={toggleMute}>Sound {muted ? 'off' : 'on'}</button>
+                        <button className="hud-cmd" onClick={() => { SFX.play('tick'); setScreen('MENU'); }}>Menu</button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main */}
+            <div className="relative z-10 flex-1 flex flex-col lg:grid lg:grid-cols-[1fr_minmax(340px,38%)] lg:grid-rows-[1fr_1fr_auto] gap-x-6 min-h-0">
+                {/* Opponent hand + deck */}
+                <div className="flex justify-center lg:justify-center items-start lg:items-center gap-8 mb-3 lg:mb-0 lg:col-start-2 lg:row-start-1">
+                    <div className="flex items-start pt-1 h-12 lg:h-auto oppwrap">
+                        {oppHand.map((oc, i) => (
+                            <div key={oc.id} style={fan(i, oppHand.length, false, -1)}><OppCard i={i}><BackFace id={back} className="oppsz" /></OppCard></div>
+                        ))}
+                    </div>
+                    <DeckPile id="deck-opp" n={oppDeck.length} small />
+                </div>
+
+                {/* Routes */}
+                <div className="flex justify-around gap-2 sm:gap-4 flex-1 w-full max-w-5xl mx-auto lg:max-w-none lg:mx-0 lg:col-start-1 lg:row-start-1 lg:row-span-2 min-h-0">
+                    {[0, 1, 2].map(tIndex => {
+                        const info = trackStatus.trackResults[tIndex];
+                        const tot = { USER: info.uTotal, AI: info.aTotal };
+                        const oppC = tracks[tIndex][opp.toLowerCase()];
+                        const myC = tracks[tIndex][me.toLowerCase()];
+                        const showDrop = numSel && canAct && (phase !== 'SETUP' || myC.length === 0);
+                        const canTarget = phase === 'PLAY' && canAct;
+                        return (
+                            <div key={tIndex} className="flex flex-col flex-1 max-w-[220px] lg:max-w-[340px] items-center p-1 sm:p-2 relative">
+                                <Caravan anim="anim-top" caravan={oppC} tIndex={tIndex} owner={opp} onTarget={onStack} canTarget={canTarget} faceSel={faceSel} />
+
+                                <div className={`stencil relative z-50 ${info.winner === 'USER' ? 'win-user' : info.winner === 'AI' ? 'win-ai' : ''}`}>
+                                    <div className="flex items-baseline justify-center gap-2"><b key={tot[opp]} className={`hud anim-pop inline-block text-base sm:text-lg ${tc(tot[opp])}`}>{tot[opp]}</b><span className="carve text-xs sm:text-sm">{ROUTE_TOP[tIndex]}</span></div>
+                                    <div className="flex items-baseline justify-center gap-2"><b key={tot[me]} className={`hud anim-pop inline-block text-base sm:text-lg ${tc(tot[me])}`}>{tot[me]}</b><span className="carve text-xs sm:text-sm">{ROUTE_BOT[tIndex]}</span></div>
+                                </div>
+
+                                <Caravan anim="anim-bot" caravan={myC} tIndex={tIndex} owner={me} onTarget={onStack} canTarget={canTarget} faceSel={faceSel}
+                                    extra={showDrop && (
+                                        <button onClick={() => onDrop(tIndex)} className="cardsz border-2 border-dashed border-[#e0a040]/50 rounded bg-black/20 hover:bg-black/30 flex items-center justify-center hud text-xs animate-pulse">[ PLACE ]</button>
+                                    )} />
+
+                                <div className="h-7 mt-1 flex items-center">
+                                    {canAct && disbandMode && myC.length > 0 && <button onClick={() => onDisband(tIndex)} className="hud-cmd text-sm animate-pulse">▶ Discard this route</button>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* My hand, deck and commands */}
+                <div className="mt-2 lg:mt-0 flex flex-col items-center lg:items-stretch lg:col-start-2 lg:row-start-2 lg:self-center gap-1 relative">
+                    <div className="flex justify-center items-end gap-4 lg:gap-8">
+                        <div className="flex justify-center items-end pt-10 pb-3 handwrap">
+                            {myHand.map((card, ix) => { const sel = selectedCard?.id === card.id; return <div key={card.id} style={fan(ix, myHand.length, sel)}><CardView deal i={ix} card={card} isSelected={sel} onClick={() => onCard(card)} /></div>; })}
+                        </div>
+                        <div className="pb-4"><DeckPile id="deck-me" n={myDeck.length} /></div>
+                    </div>
+                </div>
+                <div className="hidden lg:flex lg:col-start-1 lg:row-start-3 items-end pb-2 px-4"><span className="hud text-xl">{message}</span></div>
+                <div className="hud text-base sm:text-lg lg:text-xl flex flex-row lg:flex-col flex-wrap justify-center lg:items-end gap-x-5 lg:gap-x-0 gap-y-0.5 lg:pr-2 lg:col-start-2 lg:row-start-3 mt-1">
+                    <button className="hud-cmd" disabled={!canAct || myHand.length === 0} onClick={cycleCard}>Select Card W)</button>
+                    <button className="hud-cmd" disabled={!canAct || phase !== 'PLAY' || !selectedCard} onClick={onDiscard}>Discard Card Q)</button>
+                    <button className="hud-cmd" disabled={!canAct || phase !== 'PLAY'} onClick={() => setDisbandMode(m => !m)}>{disbandMode ? 'Pick a route…' : 'Discard Track E)'}</button>
+                    <button className="hud-cmd" disabled={!canAct || (!selectedCard && !disbandMode)} onClick={cancelSel}>Cancel R)</button>
+                    {phase === 'PLAY' && canAct && myHand.length === 0 && <button className="hud-cmd" onClick={() => dispatch({ type: 'PASS', player: me })}>Pass turn</button>}
+                </div>
+            </div>
+
+            {/* Hot-seat handover */}
+            {local && handover && screen === 'GAME' && phase !== 'GAME_OVER' && (
+                <div className="absolute inset-0 z-[55] bg-black/95 flex items-center justify-center p-4">
+                    <div className="text-center">
+                        <p className="text-xs uppercase tracking-widest text-[#888] mb-2">Hands hidden</p>
+                        <h2 className="title-font text-3xl text-[#c2a257] mb-6">{turn === 'USER' ? 'PLAYER 1' : 'PLAYER 2'}, YOUR TURN</h2>
+                        <Btn onClick={() => setHandover(false)}>Show my hand</Btn>
+                    </div>
+                </div>
+            )}
+
+            {/* Menu */}
+            {screen === 'MENU' && (
+                <div className="absolute inset-0 z-[60] bg-black/85 flex p-4 overflow-y-auto backdrop-blur-sm">
+                    <div className="m-auto wood-panel rounded-lg p-5 max-w-md w-full relative text-center">
+                        <h2 className="title-font text-5xl text-[#c2a257] drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">CARAVAN</h2>
+                        <p className="text-[10px] text-[#c9b48a] uppercase tracking-[0.3em] mb-2">New Vegas Rules</p>
+                        <Lbl>Mode</Lbl>
+                        <div className="flex gap-2 justify-center">
+                            <Opt on={settings.mode === 'AI'} onClick={() => setSettings(s => ({ ...s, mode: 'AI' }))}>vs Drifter</Opt>
+                            <Opt on={settings.mode === 'LOCAL'} onClick={() => setSettings(s => ({ ...s, mode: 'LOCAL' }))}>Local 2P</Opt>
+                        </div>
+                        {settings.mode === 'AI' ? (<>
+                            <Lbl>Difficulty</Lbl>
+                            <div className="flex gap-2 justify-center">
+                                {[['EASY', 'Rookie'], ['NORMAL', 'Gambler'], ['HARD', 'Cheat']].map(([d, l]) => (
+                                    <Opt key={d} on={settings.difficulty === d} onClick={() => setSettings(s => ({ ...s, difficulty: d }))}>
+                                        <span>{l}</span><span className="text-[10px] opacity-70 normal-case">win ×{MULT[d]}</span>
+                                    </Opt>
+                                ))}
+                            </div>
+                            <Lbl>Place your bet</Lbl>
+                            <div className="flex gap-2 justify-center flex-wrap">
+                                <Opt on={settings.bet === 0} onClick={() => setSettings(s => ({ ...s, bet: 0 }))}><span className="h-12 flex items-center text-[10px]">No stakes</span><span>Practice</span></Opt>
+                                {[10, 25, 50, 100].map(b => (
+                                    <Opt key={b} on={settings.bet === b} disabled={b > caps} onClick={() => { setSettings(s => ({ ...s, bet: b })); SFX.play('caps', Math.min(8, Math.ceil(b / 10))); }}><Money amount={b} /><span>{b}</span></Opt>
+                                ))}
+                            </div>
+                            <div className="mt-3 flex items-center justify-center gap-3 text-[#c2a257] text-sm font-bold">
+                                <Money amount={Math.min(caps, 200)} /> <span>Bankroll: {caps} caps</span>
+                            </div>
+                            {caps < 10 && <button onClick={scavenge} className="text-xs text-[#c2a257] underline mt-1">Out of caps? Scavenge +25</button>}
+                        </>) : <p className="text-xs text-[#c9b48a] mt-3">Pass the device between turns. Hands stay hidden until the next player taps.</p>}
+                        <Lbl>Card back</Lbl>
+                        <div className="flex gap-2 justify-center">
+                            {Object.entries(BACKS).map(([id, b]) => (
+                                <button key={id} onClick={() => { setBack(id); ls.set('caravan_back', id); }} className={`flex flex-col items-center gap-1 transition-transform ${back === id ? '-translate-y-1' : 'opacity-70 hover:opacity-100'}`}>
+                                    <BackFace id={id} className={`w-12 h-[4.5rem] ${back === id ? 'ring-2 ring-[#c2a257]' : ''}`} />
+                                    <span className="text-[9px] text-[#c9b48a] uppercase">{b.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <Lbl>Your deck</Lbl>
+                        <div className="flex items-center justify-center gap-3">
+                            <span className="text-xs text-[#c9b48a]">{deckKeys ? `Custom (${deckKeys.length} cards)` : 'Standard (54 cards)'}</span>
+                            <Btn onClick={() => { setDraft(deckKeys || ALL_KEYS); setScreen('DECK'); }}>Build deck</Btn>
+                        </div>
+                        {settings.mode === 'AI' && <p className="text-[10px] text-[#a89878] mt-1">The Drifter plays a random deck.</p>}
+                        <div className="flex gap-2 justify-center mt-5">
+                            <Btn onClick={start} disabled={!canStart}>New Game</Btn>
+                            {started && phase !== 'GAME_OVER' && <Btn onClick={() => setScreen('GAME')}>Resume</Btn>}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deck builder */}
+            {screen === 'DECK' && draft && (
+                <div className="absolute inset-0 z-[65] bg-black/90 flex p-3 overflow-y-auto">
+                    <div className="m-auto wood-panel rounded-lg p-4 max-w-lg w-full text-center">
+                        <h2 className="title-font text-3xl text-[#c2a257]">DECK BUILDER</h2>
+                        <p className="text-xs text-[#c9b48a] mb-2">{draft.length} / 54 cards · minimum 30</p>
+                        {SUITS.map(s => (
+                            <div key={s} className="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 mb-1">
+                                {CARD_VALUES.map(c => { const k = s + c.label, on = draft.includes(k); return (
+                                    <button key={k} onClick={() => toggleCard(k)} className={`aspect-[2/3] rounded-sm text-[9px] sm:text-xs font-black font-serif leading-tight ${on ? 'bg-[#f1e7d0] ' + SUIT_COLORS[s] : 'bg-black/40 text-[#6a5a48]'}`}>{c.label}<br />{s}</button>
+                                ); })}
+                            </div>
+                        ))}
+                        <div className="flex gap-1 justify-center mb-3">
+                            {['Jkr1', 'Jkr2'].map(k => <button key={k} onClick={() => toggleCard(k)} className={`w-10 aspect-[2/3] rounded-sm text-xs font-black ${draft.includes(k) ? 'bg-[#f1e7d0] text-[#b8860b]' : 'bg-black/40 text-[#6a5a48]'}`}>★</button>)}
+                        </div>
+                        <div className="flex gap-2 justify-center flex-wrap mb-3">
+                            <Btn onClick={() => setDraft(ALL_KEYS)}>All 54</Btn>
+                            <Btn onClick={() => setDraft([...ALL_KEYS].sort(() => Math.random() - 0.5).slice(0, 30))}>Random 30</Btn>
+                            <Btn onClick={() => setDraft([])}>Clear</Btn>
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                            <Btn disabled={draft.length < 30} onClick={() => { const v = draft.length === 54 ? null : draft; setDeckKeys(v); ls.set('caravan_deck', v); setScreen('MENU'); }}>Save deck</Btn>
+                            <Btn onClick={() => setScreen('MENU')}>Cancel</Btn>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Game over */}
+
+            {phase === 'GAME_OVER' && screen === 'GAME' && (
+                <div className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center backdrop-blur-sm p-4">
+                    <div className="wood-panel p-8 rounded text-center shadow-[0_0_50px_rgba(217,119,6,0.2)] max-w-md w-full relative overflow-hidden">
+                        <div className="absolute inset-0 card-grime pointer-events-none opacity-20"></div>
+                        <div className="relative z-10">
+                            <h2 className="title-font text-4xl text-[#c2a257] mb-2">
+                                {local ? (winner === 'USER' ? 'PLAYER 1 WINS' : 'PLAYER 2 WINS') : (winner === 'USER' ? 'JACKPOT' : 'BUSTED')}
+                            </h2>
+                            <p className="text-sm text-[#aaa] mb-4 uppercase tracking-widest">{message}</p>
+                            {payout !== null && <div className="mb-4 flex flex-col items-center gap-1"><Money amount={Math.abs(payout)} /><p className={`text-2xl font-black ${payout > 0 ? 'text-[#c9ab62]' : 'text-red-500'}`}>{payout > 0 ? '+' : '−'}{Math.abs(payout)} CAPS <span className="text-xs text-[#a89878] font-normal">({caps} total)</span></p></div>}
+                            <div className="flex justify-center gap-8 mb-6 text-lg font-bold">
+                                <div className="flex flex-col items-center"><span className="text-xs text-[#666] uppercase mb-1">{names.USER}</span><span className="text-[#b8964e] text-2xl">{trackStatus.userWins}</span></div>
+                                <div className="w-px bg-[#333] h-12"></div>
+                                <div className="flex flex-col items-center"><span className="text-xs text-[#666] uppercase mb-1">{names.AI}</span><span className="text-red-600 text-2xl">{trackStatus.aiWins}</span></div>
+                            </div>
+                            <div className="flex gap-2 justify-center">
+                                <Btn onClick={canStart ? start : () => setScreen('MENU')}>Deal Again</Btn>
+                                <Btn onClick={() => setScreen('MENU')}>Menu</Btn>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+        </BackCtx.Provider>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CaravanGame />);
+
+</script></body></html>
