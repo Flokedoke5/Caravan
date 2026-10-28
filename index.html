@@ -103,6 +103,8 @@ body{font-family:'Oswald','Segoe UI',Arial,sans-serif}
 .ink{-webkit-mask-image:var(--speck);mask-image:var(--speck);-webkit-mask-size:90px 90px;mask-size:90px 90px;opacity:.84}
 .card-frame{outline:1px solid rgba(70,55,35,.45);outline-offset:2px}
 
+.fanw:hover{z-index:60!important}
+
 </style></head>
 <body><div id="root"></div>
 <script type="text/babel">
@@ -141,7 +143,7 @@ const createDeck = (owner, keys) => {
     deck.push({ value: 0, label: 'Jkr', isFace: true, suit: '★', id: `${owner}-${generateId()}-j1`, key: 'Jkr1', owner });
     deck.push({ value: 0, label: 'Jkr', isFace: true, suit: '★', id: `${owner}-${generateId()}-j2`, key: 'Jkr2', owner });
     
-    if (keys) deck = deck.filter(c => keys.includes(c.key));
+    if (keys) { const tpl = {}; deck.forEach(c => { tpl[c.key] = c; }); deck = keys.map(k => { const [src, ck] = k.split(':'); return tpl[ck] ? { ...tpl[ck], src, id: owner + '-' + generateId() } : null; }).filter(Boolean); }
     // Shuffle
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -268,7 +270,7 @@ function gameReducer(state, action) {
     const nextTurn = (st) => {
         st.turn = st.turn === 'USER' ? 'AI' : 'USER';
         const local = st.mode === 'LOCAL';
-        const base = local ? (st.turn === 'USER' ? "Player 1’s turn." : "Player 2’s turn.") : (st.turn === 'USER' ? "Your turn." : "Drifter is thinking...");
+        const base = local ? (st.turn === 'USER' ? "Player 1’s turn." : "Player 2’s turn.") : (st.turn === 'USER' ? "Your turn." : "{OPP} is thinking...");
         if (st.phase === 'SETUP') {
             if (st.tracks.every(t => t.user.length > 0 && t.ai.length > 0)) { st.phase = 'PLAY'; st.message = "Game started! " + base; }
             else st.message = "Setup: " + base;
@@ -279,7 +281,7 @@ function gameReducer(state, action) {
             st.phase = 'GAME_OVER';
             st.winner = userWins > aiWins ? 'USER' : 'AI';
             st.message = local ? (st.winner === 'USER' ? "Player 1 takes the pot." : "Player 2 takes the pot.")
-                : (st.winner === 'USER' ? "You walked away with the caps." : "The Drifter cleaned you out.");
+                : (st.winner === 'USER' ? "You walked away with the caps." : "{OPP} cleaned you out.");
         }
     };
 
@@ -439,14 +441,14 @@ const useDrawAnim = (id, flip, delay) => {
     }, []);
     return ref;
 };
-const DealWrap = ({ i, children }) => {
+const DealWrap = ({ i, src, children }) => {
     const back = React.useContext(BackCtx);
     const ref = useDrawAnim('deck-me', true, i * 70);
     const hide = { backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' };
     return (
         <div ref={ref} className="relative cardsz shrink-0" style={{ transformStyle: 'preserve-3d' }}>
             <div style={hide}>{children}</div>
-            <div className="absolute inset-0" style={{ ...hide, transform: 'rotateY(180deg)' }}><BackFace id={back} className="w-full h-full" /></div>
+            <div className="absolute inset-0" style={{ ...hide, transform: 'rotateY(180deg)' }}><BackFace id={src || back} className="w-full h-full" /></div>
         </div>
     );
 };
@@ -462,9 +464,9 @@ const CardView = ({ card, isSelected, onClick, hidden = false, deal = false, i =
     const idx = <><div className="text-xs sm:text-sm ci1">{jk ? '★' : card.label}</div>{!jk && <div className="text-[10px] sm:text-xs ci2">{card.suit}</div>}</>;
     const face = (
         <div onClick={onClick} style={wear}
-            className={`cardsz rounded-[5px] border border-[#5e5440] bg-gradient-to-br from-[#c4b99a] to-[#968a69] worn relative select-none cursor-pointer transition-transform shadow-[0_1px_0_#7d7157,0_2px_0_#5f553f,0_5px_9px_rgba(0,0,0,0.75)] shrink-0 ${isSelected ? 'ring-2 ring-[#c9ab62] ring-offset-2 ring-offset-[#24150a] -translate-y-2' : 'hover:-translate-y-1'}`}>
-            <div className={`absolute top-0.5 left-1 leading-none text-center font-serif font-black ink ${col}`}>{idx}</div>
-            <div className={`absolute bottom-0.5 right-1 leading-none text-center font-serif font-black ink rotate-180 ${col}`}>{idx}</div>
+            className={`cardsz rounded-[5px] border border-[#5e5440] bg-gradient-to-br from-[#c4b99a] to-[#968a69] worn relative select-none cursor-pointer transition-transform shadow-[0_1px_0_#7d7157,0_2px_0_#5f553f,0_5px_9px_rgba(0,0,0,0.75)] shrink-0 ${isSelected ? 'ring-2 ring-[#c9ab62] ring-offset-2 ring-offset-[#24150a]' : 'hover:-translate-y-1'}`}>
+            <div className={`absolute top-0.5 left-1 leading-none flex items-baseline gap-px font-serif font-black ink ${col}`}>{idx}</div>
+            <div className={`absolute bottom-0.5 right-1 leading-none flex items-baseline gap-px font-serif font-black ink rotate-180 ${col}`}>{idx}</div>
             <div className={`absolute inset-x-4 sm:inset-x-5 inset-y-3 sm:inset-y-4 flex items-center justify-between ink ${col}`}>
                 {card.isFace ? (
                     <div className="w-full h-full border border-[#5e5440] rounded-[2px] flex flex-col items-center justify-center font-serif font-black bg-black/[0.05] card-frame">
@@ -477,7 +479,7 @@ const CardView = ({ card, isSelected, onClick, hidden = false, deal = false, i =
             </div>
         </div>
     );
-    return deal ? <DealWrap i={i}>{face}</DealWrap> : face;
+    return deal ? <DealWrap i={i} src={card.src}>{face}</DealWrap> : face;
 };
 
 const StackView = ({ stack, stackIndex, trackIndex, owner, onTargetClick, highlightTarget }) => {
@@ -642,22 +644,36 @@ SFX.setMuted(ls.get('caravan_mute', false));
 
 const fan = (i, n, sel, dir = 1) => {
     const step = Math.min(11, 55 / Math.max(n, 1)), a = (i - (n - 1) / 2) * step * dir, w = dir > 0 ? 'var(--cw)' : 'var(--ow)';
-    return { transform: `rotate(${a}deg) translateY(${sel ? -30 : 0}px)`, transformOrigin: dir > 0 ? '50% 200%' : '50% -100%', marginLeft: i ? `calc(${w} * -1)` : 0, zIndex: sel ? 50 : i, transition: 'transform .2s', flexShrink: 0, perspective: 800 };
+    return { transform: `rotate(${a}deg) translateY(${sel ? -18 : 0}px)`, transformOrigin: dir > 0 ? '50% 200%' : '50% -100%', marginLeft: i ? `calc(${w} * -1)` : 0, zIndex: sel ? 50 : i, transition: 'transform .2s', flexShrink: 0, perspective: 800 };
 };
 const ROUTE_TOP = ['Dry Wells', 'Scrapyard', 'Salt Flats'], ROUTE_BOT = ['Copper Gulch', 'Old Mile', 'The Crossing'];
 const HudRow = ({ l, v }) => <div className="flex justify-between gap-6"><span>{l}:</span><span>{v}</span></div>;
-const DeckPile = ({ id, n, small }) => {
+const DeckPile = ({ id, n, small, src }) => {
     const back = React.useContext(BackCtx);
     return (
         <div id={id} className={`relative ${small ? 'pile-s' : 'pile'}`}>
-            {n > 0 ? Array.from({ length: Math.min(5, Math.ceil(n / 7)) }, (_, k) => <div key={k} className="absolute inset-0" style={{ transform: `translate(${k * 1.5}px, ${-k * 1.5}px)` }}><BackFace id={back} className="w-full h-full" /></div>)
+            {n > 0 ? Array.from({ length: Math.min(5, Math.ceil(n / 7)) }, (_, k) => <div key={k} className="absolute inset-0" style={{ transform: `translate(${k * 1.5}px, ${-k * 1.5}px)` }}><BackFace id={src || back} className="w-full h-full" /></div>)
                 : <div className="w-full h-full border-2 border-dashed border-[#e0a040]/40 rounded-md" />}
             <div className="absolute -bottom-1 -right-7 hud text-base">{n}</div>
         </div>
     );
 };
 const Lbl = ({ children }) => <p className="text-xs text-[#c9b48a] uppercase tracking-widest mb-1 mt-3">{children}</p>;
-const MULT = { EASY: 1, NORMAL: 1.5, HARD: 2 };
+const SRCS = Object.keys(BACKS);
+const isFaceKey = k => k.startsWith('Jkr') || /[JQK]$/.test(k);
+const shuf = a => [...a].sort(() => Math.random() - 0.5);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = (srcs, pred, n) => shuf(srcs.flatMap(sr => ALL_KEYS.filter(pred).map(k => sr + ':' + k))).slice(0, n);
+// Opponents: own name, own deck (random every game) and own behaviour
+const OPPS = {
+    scav: { name: 'Dusty Pete', tag: 'Plays on instinct', beh: 'EASY', mult: 1, deck: () => pick(['lucky38'], () => true, ri(30, 36)) },
+    drifter: { name: 'The Drifter', tag: 'Steady, a bit random', beh: 'NORMAL', mult: 1.5, deck: () => pick(shuf(SRCS).slice(0, 2), () => true, ri(36, 54)) },
+    sharp: { name: 'Silver Tongue', tag: 'Counts every card', beh: 'HARD', mult: 2, deck: () => pick(SRCS, k => !/[23]$/.test(k), ri(54, 80)) },
+    raider: { name: 'Rusty', tag: 'Hunts your caravans', beh: 'AGGRO', mult: 2, deck: () => [...pick(SRCS, isFaceKey, ri(22, 30)), ...pick(SRCS, k => !isFaceKey(k), ri(18, 26))] },
+    nell: { name: 'Old Nell', tag: 'Never overreaches', beh: 'CAUTIOUS', mult: 2, deck: () => [...pick(SRCS, k => !isFaceKey(k), ri(40, 60)), ...pick(SRCS, k => /[KQ]$/.test(k), 6)] },
+};
+const W = { HARD: {}, AGGRO: { opp: 1.5, kill: 14, disc: 6 }, CAUTIOUS: { opp: 0.6, bust: -70, disc: 2 } };
+const userStacks = (st) => st.tracks.reduce((n, t) => n + t.user.length, 0);
 const loadCaps = () => { try { const v = parseInt(localStorage.getItem('caravan_caps')); return isNaN(v) ? 100 : v; } catch (e) { return 100; } };
 const saveCaps = (n) => { try { localStorage.setItem('caravan_caps', String(n)); } catch (e) {} };
 
@@ -681,13 +697,13 @@ const legalActions = (st) => {
     return acts;
 };
 const simulate = (st, act) => { const s = gameReducer(structuredClone(st), act); return s.turn !== st.turn ? s : null; };
-const evalState = (s) => {
+const evalState = (s, w = {}) => {
     let sc = 0;
-    const f = x => x > 26 ? -15 : x >= 21 ? 60 + x : x * 2;
+    const f = x => x > 26 ? (w.bust ?? -15) : x >= 21 ? 60 + x : x * 2;
     s.tracks.forEach(t => {
         const a = getCaravanTotal(t.ai), u = getCaravanTotal(t.user);
         const av = a >= 21 && a <= 26, uv = u >= 21 && u <= 26;
-        sc += f(a) - 0.9 * f(u);
+        sc += f(a) - (w.opp ?? 0.9) * f(u);
         if (av && (!uv || a > u)) sc += 40;
         if (uv && (!av || u > a)) sc -= 40;
     });
@@ -697,12 +713,12 @@ const evalState = (s) => {
 };
 const pickAI = (st, diff) => {
     const acts = legalActions(st);
-    if (diff === 'HARD') {
+    if (W[diff]) {
         let best = null, bs = -Infinity;
         acts.forEach(a => {
             const s = simulate(st, a); if (!s) return;
-            let sc = evalState(s) + Math.random() * 2;
-            if (a.type === 'DISCARD') sc -= 4 + (a.card.isFace ? 10 : 0);
+            const w = W[diff]; let sc = evalState(s, w) + Math.random() * 2 + (w.kill || 0) * (userStacks(st) - userStacks(s));
+            if (a.type === 'DISCARD') sc -= (w.disc ?? 4) + (a.card.isFace ? 10 : 0);
             if (sc > bs) { bs = sc; best = a; }
         });
         if (best) return best;
@@ -748,7 +764,7 @@ const Btn = ({ onClick, disabled, children }) => (
 // Stacks are absolutely positioned and squeeze together when the caravan grows, so the page never gets taller.
 const Caravan = ({ caravan, tIndex, owner, extra, onTarget, canTarget, faceSel, anim }) => {
     const n = caravan.length + (extra ? 1 : 0);
-    const topFor = (i) => n <= 1 ? '0px' : `min(calc(var(--off) * ${i}), calc((100% - var(--ch)) * ${i} / ${n - 1}))`;
+    const topFor = (i) => n <= 1 ? '0px' : `max(calc(18px * ${i}), min(calc(var(--off) * ${i}), calc((100% - var(--ch)) * ${i} / ${n - 1})))`;
     return (
         <div className="relative w-full flex-1 min-h-[calc(var(--ch)+70px)]">
             {caravan.map((stack, i) => (
@@ -766,18 +782,20 @@ function CaravanGame() {
     const [state, dispatch] = useReducer(gameReducer, 'AI', getInitialState);
     const [screen, setScreen] = useState('MENU');
     const [started, setStarted] = useState(false);
-    const [settings, setSettings] = useState({ mode: 'AI', difficulty: 'NORMAL', bet: 10 });
+    const [settings, setSettings] = useState({ mode: 'AI', opp: 'drifter', bet: 10 });
     const [caps, setCaps] = useState(loadCaps);
     const [payout, setPayout] = useState(null);
     const [handover, setHandover] = useState(false);
     const [armed, setArmed] = useState(null);
+    const [curOpp, setCurOpp] = useState('drifter');
+    const [dsrc, setDsrc] = useState('lucky38');
     const [disbandMode, setDisbandMode] = useState(false);
     const [wl, setWl] = useState(() => ls.get('caravan_wl', [0, 0]));
     const settled = useRef(false);
     const [back, setBack] = useState(() => ls.get('caravan_back', 'lucky38'));
-    const [deckKeys, setDeckKeys] = useState(() => ls.get('caravan_deck', null));
+    const [deckKeys, setDeckKeys] = useState(() => ls.get('caravan_deck2', null));
     const [draft, setDraft] = useState(null);
-    const toggleCard = (k) => setDraft(d => d.includes(k) ? d.filter(x => x !== k) : [...d, k]);
+    const toggleCard = (k) => setDraft(d => { const f = dsrc + ':' + k; return d.includes(f) ? d.filter(x => x !== f) : [...d, f]; });
     const prevTurn = useRef(state.turn);
     const { phase, turn, mode, userHand, aiHand, tracks, selectedCard, message, winner } = state;
     const trackStatus = checkTracksStatus(tracks);
@@ -799,6 +817,7 @@ function CaravanGame() {
         if (glass) setTimeout(() => SFX.play('glass'), 200); else if (pencil) setTimeout(() => SFX.play('pencil'), 200);
     }, [tracks, turn]);
     const local = mode === 'LOCAL';
+    const shownMsg = message.replace('{OPP}', OPPS[curOpp].name);
     const me = local ? turn : 'USER';
     const opp = me === 'USER' ? 'AI' : 'USER';
     const canAct = phase !== 'GAME_OVER' && screen === 'GAME' && (local ? !handover : turn === 'USER');
@@ -806,13 +825,13 @@ function CaravanGame() {
     const oppHand = me === 'USER' ? aiHand : userHand;
     const myDeck = me === 'USER' ? state.userDeck : state.aiDeck;
     const oppDeck = me === 'USER' ? state.aiDeck : state.userDeck;
-    const names = local ? { USER: 'PLAYER 1', AI: 'PLAYER 2' } : { USER: 'COURIER', AI: 'DRIFTER' };
+    const names = local ? { USER: 'PLAYER 1', AI: 'PLAYER 2' } : { USER: 'COURIER', AI: OPPS[curOpp].name.toUpperCase() };
     const faceSel = selectedCard && selectedCard.isFace ? selectedCard : null;
     const numSel = selectedCard && !selectedCard.isFace;
 
     useEffect(() => {
         if (mode !== 'AI' || turn !== 'AI' || phase === 'GAME_OVER') return;
-        const t = setTimeout(() => dispatch(pickAI(state, settings.difficulty)), settings.difficulty === 'HARD' ? 1400 : 1800);
+        const beh = OPPS[curOpp].beh; const t = setTimeout(() => dispatch(pickAI(state, beh)), beh === 'EASY' || beh === 'NORMAL' ? 1800 : 1400);
         return () => clearTimeout(t);
     }, [turn, phase, mode]);
 
@@ -827,7 +846,7 @@ function CaravanGame() {
         settled.current = true;
         if (mode === 'AI') setWl(w => { const n = winner === 'USER' ? [w[0] + 1, w[1]] : [w[0], w[1] + 1]; ls.set('caravan_wl', n); return n; });
         if (mode === 'AI' && settings.bet > 0) {
-            const d = winner === 'USER' ? Math.round(settings.bet * MULT[settings.difficulty]) : -settings.bet;
+            const d = winner === 'USER' ? Math.round(settings.bet * OPPS[curOpp].mult) : -settings.bet;
             setPayout(d); setTimeout(() => d > 0 ? SFX.play('caps', 8) : SFX.play('thud'), 600);
             setCaps(c => { const n = Math.max(0, c + d); saveCaps(n); return n; });
         } else setPayout(null);
@@ -837,8 +856,9 @@ function CaravanGame() {
     const start = () => {
         if (!canStart) return;
         SFX.play('shuffle'); skip.current = true;
-        const rk = [...ALL_KEYS].sort(() => Math.random() - 0.5).slice(0, 30 + Math.floor(Math.random() * 25));
-        dispatch({ type: 'RESET', mode: settings.mode, opts: { userKeys: deckKeys, aiKeys: settings.mode === 'LOCAL' ? deckKeys : rk } });
+        const oid = settings.opp === 'random' ? Object.keys(OPPS)[Math.floor(Math.random() * 5)] : settings.opp;
+        setCurOpp(oid);
+        dispatch({ type: 'RESET', mode: settings.mode, opts: { userKeys: deckKeys, aiKeys: settings.mode === 'LOCAL' ? deckKeys : OPPS[oid].deck() } });
         setPayout(null); setStarted(true); setScreen('GAME'); setHandover(settings.mode === 'LOCAL');
     };
     const scavenge = () => { SFX.play('caps', 5); const n = caps + 25; setCaps(n); saveCaps(n); setSettings(s => ({ ...s, bet: Math.min(s.bet, 10) })); };
@@ -874,7 +894,7 @@ function CaravanGame() {
                     <h1 className="title-font text-2xl sm:text-4xl text-[#c9a860] drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none">CARAVAN</h1>
                 </div>
                 <div className="flex-1 min-w-[160px] text-center self-center lg:hidden">
-                    <span className={`hud text-sm sm:text-base ${canAct ? '' : 'opacity-60'}`}>{message}</span>
+                    <span className={`hud text-sm sm:text-base ${canAct ? '' : 'opacity-60'}`}>{shownMsg}</span>
                 </div>
                 <div className="hud text-sm sm:text-base lg:text-xl w-[190px] sm:w-[230px] lg:w-[320px] leading-snug">
                     {!local && <HudRow l="Ante Pot" v={settings.bet} />}
@@ -894,10 +914,10 @@ function CaravanGame() {
                 <div className="flex justify-center lg:justify-center items-start lg:items-center gap-8 mb-3 lg:mb-0 lg:col-start-2 lg:row-start-1">
                     <div className="flex items-start pt-1 h-12 lg:h-auto oppwrap">
                         {oppHand.map((oc, i) => (
-                            <div key={oc.id} style={fan(i, oppHand.length, false, -1)}><OppCard i={i}><BackFace id={back} className="oppsz" /></OppCard></div>
+                            <div key={oc.id} style={fan(i, oppHand.length, false, -1)}><OppCard i={i}><BackFace id={oc.src || back} className="oppsz" /></OppCard></div>
                         ))}
                     </div>
-                    <DeckPile id="deck-opp" n={oppDeck.length} small />
+                    <DeckPile id="deck-opp" n={oppDeck.length} src={oppDeck[0]?.src} small />
                 </div>
 
                 {/* Routes */}
@@ -935,12 +955,12 @@ function CaravanGame() {
                 <div className="mt-2 lg:mt-0 flex flex-col items-center lg:items-stretch lg:col-start-2 lg:row-start-2 lg:self-center gap-1 relative">
                     <div className="flex justify-center items-end gap-4 lg:gap-8">
                         <div className="flex justify-center items-end pt-10 pb-3 handwrap">
-                            {myHand.map((card, ix) => { const sel = selectedCard?.id === card.id; return <div key={card.id} style={fan(ix, myHand.length, sel)}><CardView deal i={ix} card={card} isSelected={sel} onClick={() => onCard(card)} /></div>; })}
+                            {myHand.map((card, ix) => { const sel = selectedCard?.id === card.id; return <div key={card.id} className="fanw" style={fan(ix, myHand.length, sel)}><CardView deal i={ix} card={card} isSelected={sel} onClick={() => onCard(card)} /></div>; })}
                         </div>
-                        <div className="pb-4"><DeckPile id="deck-me" n={myDeck.length} /></div>
+                        <div className="pb-4"><DeckPile id="deck-me" n={myDeck.length} src={myDeck[0]?.src} /></div>
                     </div>
                 </div>
-                <div className="hidden lg:flex lg:col-start-1 lg:row-start-3 items-end pb-2 px-4"><span className="hud text-xl">{message}</span></div>
+                <div className="hidden lg:flex lg:col-start-1 lg:row-start-3 items-end pb-2 px-4"><span className="hud text-xl">{shownMsg}</span></div>
                 <div className="hud text-base sm:text-lg lg:text-xl flex flex-row lg:flex-col flex-wrap justify-center lg:items-end gap-x-5 lg:gap-x-0 gap-y-0.5 lg:pr-2 lg:col-start-2 lg:row-start-3 mt-1">
                     <button className="hud-cmd" disabled={!canAct || myHand.length === 0} onClick={cycleCard}>Select Card W)</button>
                     <button className="hud-cmd" disabled={!canAct || phase !== 'PLAY' || !selectedCard} onClick={onDiscard}>Discard Card Q)</button>
@@ -969,15 +989,15 @@ function CaravanGame() {
                         <p className="text-[10px] text-[#c9b48a] uppercase tracking-[0.3em] mb-2">New Vegas Rules</p>
                         <Lbl>Mode</Lbl>
                         <div className="flex gap-2 justify-center">
-                            <Opt on={settings.mode === 'AI'} onClick={() => setSettings(s => ({ ...s, mode: 'AI' }))}>vs Drifter</Opt>
+                            <Opt on={settings.mode === 'AI'} onClick={() => setSettings(s => ({ ...s, mode: 'AI' }))}>vs AI</Opt>
                             <Opt on={settings.mode === 'LOCAL'} onClick={() => setSettings(s => ({ ...s, mode: 'LOCAL' }))}>Local 2P</Opt>
                         </div>
                         {settings.mode === 'AI' ? (<>
-                            <Lbl>Difficulty</Lbl>
-                            <div className="flex gap-2 justify-center">
-                                {[['EASY', 'Rookie'], ['NORMAL', 'Gambler'], ['HARD', 'Cheat']].map(([d, l]) => (
-                                    <Opt key={d} on={settings.difficulty === d} onClick={() => setSettings(s => ({ ...s, difficulty: d }))}>
-                                        <span>{l}</span><span className="text-[10px] opacity-70 normal-case">win ×{MULT[d]}</span>
+                            <Lbl>Opponent</Lbl>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[...Object.entries(OPPS), ['random', { name: 'Random', tag: 'Anyone may sit down', mult: null }]].map(([id, o]) => (
+                                    <Opt key={id} on={settings.opp === id} onClick={() => setSettings(x => ({ ...x, opp: id }))}>
+                                        <span>{o.name}</span><span className="text-[10px] opacity-70 normal-case tracking-normal">{o.tag}</span><span className="text-[10px] opacity-80 normal-case tracking-normal">{o.mult ? `win ×${o.mult}` : 'win ×1–2'}</span>
                                     </Opt>
                                 ))}
                             </div>
@@ -1005,9 +1025,9 @@ function CaravanGame() {
                         <Lbl>Your deck</Lbl>
                         <div className="flex items-center justify-center gap-3">
                             <span className="text-xs text-[#c9b48a]">{deckKeys ? `Custom (${deckKeys.length} cards)` : 'Standard (54 cards)'}</span>
-                            <Btn onClick={() => { setDraft(deckKeys || ALL_KEYS); setScreen('DECK'); }}>Build deck</Btn>
+                            <Btn onClick={() => { setDraft(deckKeys || ALL_KEYS.map(k => back + ':' + k)); setScreen('DECK'); }}>Build deck</Btn>
                         </div>
-                        {settings.mode === 'AI' && <p className="text-[10px] text-[#a89878] mt-1">The Drifter plays a random deck.</p>}
+                        {settings.mode === 'AI' && <p className="text-[10px] text-[#a89878] mt-1">Every opponent brings a random deck of their own.</p>}
                         <div className="flex gap-2 justify-center mt-5">
                             <Btn onClick={start} disabled={!canStart}>New Game</Btn>
                             {started && phase !== 'GAME_OVER' && <Btn onClick={() => setScreen('GAME')}>Resume</Btn>}
@@ -1019,26 +1039,36 @@ function CaravanGame() {
             {/* Deck builder */}
             {screen === 'DECK' && draft && (
                 <div className="absolute inset-0 z-[65] bg-black/90 flex p-3 overflow-y-auto">
-                    <div className="m-auto wood-panel rounded-lg p-4 max-w-lg w-full text-center">
+                    <div className="m-auto wood-panel rounded-lg p-4 max-w-xl w-full text-center">
                         <h2 className="title-font text-3xl text-[#c2a257]">DECK BUILDER</h2>
-                        <p className="text-xs text-[#c9b48a] mb-2">{draft.length} / 54 cards · minimum 30</p>
+                        <p className="text-xs text-[#c9b48a] mb-2">{draft.length} cards · minimum 30 · one copy of each card per deck, so max 4 of the same card</p>
+                        <div className="flex gap-3 justify-center mb-3">
+                            {Object.entries(BACKS).map(([id, b]) => (
+                                <button key={id} onClick={() => setDsrc(id)} className={`flex flex-col items-center gap-1 transition-transform ${dsrc === id ? '-translate-y-1' : 'opacity-60 hover:opacity-100'}`}>
+                                    <BackFace id={id} className={`w-10 h-14 ${dsrc === id ? 'ring-2 ring-[#c9ab62]' : ''}`} />
+                                    <span className="text-[9px] text-[#c9b48a] uppercase">{b.name}</span>
+                                    <span className="text-[10px] text-[#c9ab62]">{draft.filter(x => x.startsWith(id + ':')).length}/54</span>
+                                </button>
+                            ))}
+                        </div>
                         {SUITS.map(s => (
                             <div key={s} className="grid grid-cols-[repeat(13,minmax(0,1fr))] gap-0.5 mb-1">
-                                {CARD_VALUES.map(c => { const k = s + c.label, on = draft.includes(k); return (
-                                    <button key={k} onClick={() => toggleCard(k)} className={`aspect-[2/3] rounded-sm text-[9px] sm:text-xs font-black font-serif leading-tight ${on ? 'bg-[#f1e7d0] ' + SUIT_COLORS[s] : 'bg-black/40 text-[#6a5a48]'}`}>{c.label}<br />{s}</button>
+                                {CARD_VALUES.map(c => { const k = s + c.label, on = draft.includes(dsrc + ':' + k), tot = draft.filter(x => x.endsWith(':' + k)).length; return (
+                                    <button key={k} onClick={() => toggleCard(k)} className={`relative aspect-[2/3] rounded-sm text-[9px] sm:text-xs font-black font-serif leading-tight ${on ? 'bg-[#b9ac8a] ' + SUIT_COLORS[s] : 'bg-black/40 text-[#6a5a48]'}`}>{c.label}<br />{s}{tot > 0 && <span className="absolute -top-1 -right-0.5 bg-[#14100c] text-[#c9ab62] text-[8px] leading-none px-0.5 rounded">{tot}</span>}</button>
                                 ); })}
                             </div>
                         ))}
                         <div className="flex gap-1 justify-center mb-3">
-                            {['Jkr1', 'Jkr2'].map(k => <button key={k} onClick={() => toggleCard(k)} className={`w-10 aspect-[2/3] rounded-sm text-xs font-black ${draft.includes(k) ? 'bg-[#f1e7d0] text-[#b8860b]' : 'bg-black/40 text-[#6a5a48]'}`}>★</button>)}
+                            {['Jkr1', 'Jkr2'].map(k => <button key={k} onClick={() => toggleCard(k)} className={`w-10 aspect-[2/3] rounded-sm text-xs font-black ${draft.includes(dsrc + ':' + k) ? 'bg-[#b9ac8a] text-[#7a5a10]' : 'bg-black/40 text-[#6a5a48]'}`}>★</button>)}
                         </div>
                         <div className="flex gap-2 justify-center flex-wrap mb-3">
-                            <Btn onClick={() => setDraft(ALL_KEYS)}>All 54</Btn>
-                            <Btn onClick={() => setDraft([...ALL_KEYS].sort(() => Math.random() - 0.5).slice(0, 30))}>Random 30</Btn>
-                            <Btn onClick={() => setDraft([])}>Clear</Btn>
+                            <Btn onClick={() => setDraft(d => [...d.filter(x => !x.startsWith(dsrc + ':')), ...ALL_KEYS.map(k => dsrc + ':' + k)])}>Fill this deck</Btn>
+                            <Btn onClick={() => setDraft(d => d.filter(x => !x.startsWith(dsrc + ':')))}>Empty this deck</Btn>
+                            <Btn onClick={() => setDraft(Object.keys(BACKS).flatMap(id => ALL_KEYS.map(k => id + ':' + k)))}>All four (216)</Btn>
+                            <Btn onClick={() => setDraft(ALL_KEYS.map(k => back + ':' + k))}>Standard 54</Btn>
                         </div>
                         <div className="flex gap-2 justify-center">
-                            <Btn disabled={draft.length < 30} onClick={() => { const v = draft.length === 54 ? null : draft; setDeckKeys(v); ls.set('caravan_deck', v); setScreen('MENU'); }}>Save deck</Btn>
+                            <Btn disabled={draft.length < 30} onClick={() => { setDeckKeys(draft); ls.set('caravan_deck2', draft); setScreen('MENU'); }}>Save deck</Btn>
                             <Btn onClick={() => setScreen('MENU')}>Cancel</Btn>
                         </div>
                     </div>
@@ -1055,7 +1085,7 @@ function CaravanGame() {
                             <h2 className="title-font text-4xl text-[#c2a257] mb-2">
                                 {local ? (winner === 'USER' ? 'PLAYER 1 WINS' : 'PLAYER 2 WINS') : (winner === 'USER' ? 'JACKPOT' : 'BUSTED')}
                             </h2>
-                            <p className="text-sm text-[#aaa] mb-4 uppercase tracking-widest">{message}</p>
+                            <p className="text-sm text-[#aaa] mb-4 uppercase tracking-widest">{shownMsg}</p>
                             {payout !== null && <div className="mb-4 flex flex-col items-center gap-1"><Money amount={Math.abs(payout)} /><p className={`text-2xl font-black ${payout > 0 ? 'text-[#c9ab62]' : 'text-red-500'}`}>{payout > 0 ? '+' : '−'}{Math.abs(payout)} CAPS <span className="text-xs text-[#a89878] font-normal">({caps} total)</span></p></div>}
                             <div className="flex justify-center gap-8 mb-6 text-lg font-bold">
                                 <div className="flex flex-col items-center"><span className="text-xs text-[#666] uppercase mb-1">{names.USER}</span><span className="text-[#b8964e] text-2xl">{trackStatus.userWins}</span></div>
